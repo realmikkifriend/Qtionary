@@ -6,11 +6,16 @@
     let searchResults: any[] = $state([]);
     let loading = $state(false);
     let searchInput: HTMLInputElement | undefined = $state();
-    let initialLoad = $state(true);
+    let lastSearchedTerm = $state('');
 
     const searchWiktionary = debounce(async (term: string) => {
         if (term.length < 3) {
             searchResults = [];
+            lastSearchedTerm = term;
+            return;
+        }
+
+        if (term === lastSearchedTerm) {
             return;
         }
 
@@ -18,10 +23,13 @@
         searchResults = [];
         try {
             const response = await fetch(
-                `https://en.wiktionary.org/w/api.php?action=query&format=json&list=search&formatversion=2&srsearch=${term}&srnamespace=0&srlimit=10&origin=*`
+                `https://en.wiktionary.org/w/api.php?` +
+                    `action=query&format=json&list=search&` +
+                    `formatversion=2&srsearch=${term}&srnamespace=0&srlimit=10&origin=*`
             );
             const data = await response.json();
             searchResults = data.query.search;
+            lastSearchedTerm = term;
         } catch (error) {
             console.error('Error fetching from Wiktionary:', error);
         } finally {
@@ -30,10 +38,10 @@
     }, 500);
 
     $effect(() => {
-        if (!initialLoad) {
+        if (searchTerm !== lastSearchedTerm) {
             updateUrl(searchTerm);
+            searchWiktionary(searchTerm);
         }
-        searchWiktionary(searchTerm);
     });
 
     function updateUrl(term: string) {
@@ -51,15 +59,13 @@
         const query = urlParams.get('q');
         if (query) {
             searchTerm = query;
+            loading = true;
+            searchWiktionary(query);
         }
 
         if (searchInput) {
             searchInput.focus();
         }
-
-        setTimeout(() => {
-            initialLoad = false;
-        }, 1000);
     });
 </script>
 
@@ -100,7 +106,7 @@
                 {/each}
             </ul>
         </article>
-    {:else if searchTerm.length >= 3 && !loading && !initialLoad}
+    {:else if searchTerm.length >= 3 && !loading}
         <p>No results found for "{searchTerm}".</p>
     {/if}
 </main>
