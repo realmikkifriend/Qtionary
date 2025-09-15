@@ -1,47 +1,106 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+    import { debounce } from 'lodash';
+    import { onMount } from 'svelte';
+
+    let searchTerm = $state('');
+    let searchResults: any[] = $state([]);
+    let loading = $state(false);
+    let searchInput: HTMLInputElement | undefined = $state();
+    let initialLoad = $state(true);
+
+    const searchWiktionary = debounce(async (term: string) => {
+        if (term.length < 3) {
+            searchResults = [];
+            return;
+        }
+
+        loading = true;
+        searchResults = [];
+        try {
+            const response = await fetch(
+                `https://en.wiktionary.org/w/api.php?action=query&format=json&list=search&formatversion=2&srsearch=${term}&srnamespace=0&srlimit=10&origin=*`
+            );
+            const data = await response.json();
+            searchResults = data.query.search;
+        } catch (error) {
+            console.error('Error fetching from Wiktionary:', error);
+        } finally {
+            loading = false;
+        }
+    }, 500);
+
+    $effect(() => {
+        if (!initialLoad) {
+            updateUrl(searchTerm);
+        }
+        searchWiktionary(searchTerm);
+    });
+
+    function updateUrl(term: string) {
+        const url = new URL(window.location.href);
+        if (term) {
+            url.searchParams.set('q', term);
+        } else {
+            url.searchParams.delete('q');
+        }
+        window.history.replaceState({}, '', url.toString());
+    }
+
+    onMount(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (query) {
+            searchTerm = query;
+        }
+
+        if (searchInput) {
+            searchInput.focus();
+        }
+
+        setTimeout(() => {
+            initialLoad = false;
+        }, 1000);
+    });
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<main class="container">
+    <hgroup>
+        <h1>Qtionary</h1>
+        <h2>Wiktionary Search</h2>
+    </hgroup>
 
-  <div class="card">
-    <Counter />
-  </div>
+    <input
+        type="search"
+        id="search"
+        name="search"
+        placeholder="search Wiktionary..."
+        bind:value={searchTerm}
+        bind:this={searchInput}
+        aria-label="Search"
+    />
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+    {#if loading}
+        <p aria-busy="true">Searching...</p>
+    {:else if searchResults.length > 0}
+        <article>
+            <hgroup>
+                <h3>Search Results ({searchResults.length})</h3>
+            </hgroup>
+            <ul style="list-style: none; padding-left: 0;">
+                {#each searchResults as result (result.pageid)}
+                    <li>
+                        <a
+                            href="https://en.wiktionary.org/wiki/{result.title}"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            <strong>{result.title}</strong>
+                        </a>
+                    </li>
+                {/each}
+            </ul>
+        </article>
+    {:else if searchTerm.length >= 3 && !loading && !initialLoad}
+        <p>No results found for "{searchTerm}".</p>
+    {/if}
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>

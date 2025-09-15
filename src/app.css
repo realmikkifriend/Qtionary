@@ -27,7 +27,8 @@ a:hover {
 body {
     margin: 0;
     display: flex;
-    place-items: center;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center horizontally */
     min-width: 320px;
     min-height: 100vh;
 }
@@ -43,9 +44,10 @@ h1 {
 
 #app {
     max-width: 1280px;
-    margin: 0 auto;
+    width: 100%; /* Ensure it takes full width */
+    margin: 0; /* Remove auto margin */
     padding: 2rem;
-    text-align: center;
+    text-align: left; /* Align text to the left */
 }
 
 button {
