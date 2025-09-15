@@ -32,7 +32,16 @@ export function resettablePersisted<T>(
     initialValue: T,
     options?: Parameters<typeof persisted<T>>[2]
 ): ResettableStore<T> {
-    const { subscribe, set, update } = persisted<T>(key, initialValue, options);
+    const { subscribe, set, update } = persisted<T>(key, initialValue, {
+        ...options,
+        serializer: {
+            parse: (text: string) => {
+                const parsed = JSON.parse(text);
+                return { ...initialValue, ...parsed };
+            },
+            stringify: JSON.stringify
+        }
+    });
     return {
         subscribe,
         set,
@@ -63,8 +72,27 @@ export function resetAllStores(): void {
     stores.forEach((store) => store.reset());
 }
 
-export const userSettings = resettablePersisted('userSettings', {
-    displayLanguages: ['English']
+export type SectionSetting =
+    | 'always-show'
+    | 'collapsible-open'
+    | 'collapsible-closed'
+    | 'hide';
+
+export interface UserSettings {
+    displayLanguages: string[];
+    sectionSettings: Record<string, SectionSetting>;
+}
+
+export const userSettings = resettablePersisted<UserSettings>('userSettings', {
+    displayLanguages: ['English', 'Spanish', 'Latin', 'Italian'],
+    sectionSettings: {
+        Etymology: 'always-show',
+        Pronunciation: 'hide',
+        Conjugation: 'always-show',
+        Anagrams: 'hide',
+        Further_reading: 'hide',
+        References: 'hide'
+    }
 });
 
 registerStore(userSettings);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { userSettings } from './stores';
+    import { userSettings, type SectionSetting } from './stores';
     import { get } from 'svelte/store';
 
     let { word: initialWord = '' } = $props();
@@ -69,10 +69,12 @@
     }
 
     function parseLanguageSections(htmlText: string) {
+        const modifiedHtmlText = htmlText.replace(/\btright\b/g, 'float-right');
         const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
+        const doc = parser.parseFromString(modifiedHtmlText, 'text/html');
         const extractedLanguages: { name: string; content: string }[] = [];
         let currentLanguage: { name: string; content: string } | null = null;
+        const sectionSettings = get(userSettings).sectionSettings;
 
         const parserOutput = doc.querySelector('.mw-parser-output');
         if (!parserOutput) {
@@ -101,9 +103,10 @@
             }
         });
 
-        const children = Array.from(parserOutput.children);
+        let node = parserOutput.firstElementChild;
+        while (node) {
+            const nextNode = node.nextElementSibling;
 
-        for (const node of children) {
             if (node.matches('.mw-heading2')) {
                 const h2 = node.querySelector('h2');
                 if (h2) {
@@ -115,9 +118,70 @@
                         content: ''
                     };
                 }
+            } else if (node.matches('.mw-heading3')) {
+                const h3 = node.querySelector('h3');
+                if (h3) {
+                    const sectionName = h3.id;
+                    let setting: SectionSetting = 'always-show';
+                    for (const key in sectionSettings) {
+                        if (sectionName.startsWith(key)) {
+                            setting = sectionSettings[key];
+                            break;
+                        }
+                    }
+                    console.log(sectionName);
+                    console.log(sectionSettings);
+                    console.log(setting);
+
+                    if (setting === 'hide') {
+                        node.remove();
+                        let tempNode = nextNode;
+                        while (
+                            tempNode &&
+                            !tempNode.matches('.mw-heading2') &&
+                            !tempNode.matches('.mw-heading3')
+                        ) {
+                            const toRemove = tempNode;
+                            tempNode = tempNode.nextElementSibling;
+                            toRemove.remove();
+                        }
+                        node = tempNode;
+                        continue;
+                    }
+
+                    if (setting.startsWith('collapsible')) {
+                        const details = doc.createElement('details');
+                        details.open = setting === 'collapsible-open';
+                        const summary = doc.createElement('summary');
+                        summary.innerHTML = h3.outerHTML;
+                        details.appendChild(summary);
+
+                        let tempSibling = nextNode;
+                        while (
+                            tempSibling &&
+                            !tempSibling.matches('.mw-heading2') &&
+                            !tempSibling.matches('.mw-heading3')
+                        ) {
+                            const toMove = tempSibling;
+                            tempSibling = tempSibling.nextElementSibling;
+                            details.appendChild(toMove);
+                        }
+                        node.replaceWith(details);
+                        node = details;
+                        if (currentLanguage) {
+                            currentLanguage.content += node.outerHTML;
+                        }
+                        node = tempSibling;
+                        continue;
+                    }
+                }
+                if (currentLanguage) {
+                    currentLanguage.content += node.outerHTML;
+                }
             } else if (currentLanguage) {
                 currentLanguage.content += node.outerHTML;
             }
+            node = nextNode;
         }
 
         if (currentLanguage) {

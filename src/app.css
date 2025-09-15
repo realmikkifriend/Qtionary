@@ -149,6 +149,10 @@ select {
     color: var(--error-color);
 }
 
+.was-wotd {
+    display: none;
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         color: #213547;

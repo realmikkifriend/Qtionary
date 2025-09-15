@@ -1,13 +1,21 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { userSettings } from './stores';
+    import { userSettings, resetAllStores } from './stores';
     import { get } from 'svelte/store';
+    import type { SectionSetting } from './stores';
 
     interface Language {
         code: string;
         bcp47: string;
         name: string;
     }
+
+    const sectionOptions = [
+        { value: 'always-show', label: 'Always show' },
+        { value: 'collapsible-open', label: 'Collapsible (open)' },
+        { value: 'collapsible-closed', label: 'Collapsible (closed)' },
+        { value: 'hide', label: 'Hide' }
+    ];
 
     let languages: Language[] = $state([]);
     let groupedLanguages: Record<string, Language[]> = $derived(
@@ -44,8 +52,10 @@
     );
     let loading = $state(true);
     let error: string | null = $state(null);
+    let groupOpenStates: Record<string, boolean> = $state({});
 
     onMount(async () => {
+        languages.forEach((lang) => (groupOpenStates[lang.code] = false));
         try {
             const response = await fetch(
                 'https://en.wiktionary.org/w/api.php?action=query&format=json&meta=siteinfo&formatversion=2&siprop=languages&siinlanguagecode=English&origin=*'
@@ -75,7 +85,7 @@
             ...selectedLanguages,
             [code]: !selectedLanguages[code]
         };
-        userSettings.update((settings: { displayLanguages: string[] }) => {
+        userSettings.update((settings) => {
             const languageName = languages.find((l) => l.code === code)?.name;
             if (languageName) {
                 if (selectedLanguages[code]) {
@@ -101,7 +111,7 @@
             }
         }
         selectedLanguages = newSelection;
-        userSettings.update((settings: { displayLanguages: string[] }) => {
+        userSettings.update((settings) => {
             settings.displayLanguages = select
                 ? [
                       ...new Set([
@@ -115,9 +125,23 @@
             return settings;
         });
     }
+
+    function updateSectionSetting(
+        sectionName: string,
+        setting: SectionSetting
+    ) {
+        userSettings.update((settings) => {
+            settings.sectionSettings = {
+                ...settings.sectionSettings,
+                [sectionName]: setting
+            };
+            return settings;
+        });
+    }
 </script>
 
 <article>
+    <button class="absolute right-3" onclick={resetAllStores}>Reset</button>
     <section>
         <h1>Settings</h1>
 
@@ -131,23 +155,32 @@
                 const order = ['Main Languages', 'Dialects', 'Other'];
                 return order.indexOf(a) - order.indexOf(b);
             }) as [groupName, langs]}
-                <details class="language-group">
-                    <summary>
-                        <h3>{groupName}</h3>
-                        <button
-                            onclick={(event) => {
-                                event.preventDefault();
-                                selectAll(langs, true);
-                            }}>Select All</button
-                        >
-                        <button
-                            onclick={(event) => {
-                                event.preventDefault();
-                                selectAll(langs, false);
-                            }}>Unselect All</button
-                        >
+                <details
+                    class="mb-4 border border-gray-200 p-2 rounded"
+                    bind:open={groupOpenStates[groupName]}
+                >
+                    <summary
+                        class="cursor-pointer flex items-center justify-between"
+                    >
+                        <h5 class="m-0 flex-grow !mb-0">{groupName}</h5>
+                        {#if groupOpenStates[groupName]}
+                            <button
+                                class="ml-2 py-0 px-0.5 !text-xs text-nowrap cursor-pointer"
+                                onclick={(event: Event) => {
+                                    event.preventDefault();
+                                    selectAll(langs, true);
+                                }}>Select All</button
+                            >
+                            <button
+                                class="l-2 py-0 px-0.5 !text-xs text-nowrap cursor-pointer"
+                                onclick={(event: Event) => {
+                                    event.preventDefault();
+                                    selectAll(langs, false);
+                                }}>Unselect All</button
+                            >
+                        {/if}
                     </summary>
-                    <ul>
+                    <ul class="list-none p-0 mt-2">
                         {#each langs.sort((a, b) => {
                             const aChecked = selectedLanguages[a.code];
                             const bChecked = selectedLanguages[b.code];
@@ -155,7 +188,7 @@
                             if (!aChecked && bChecked) return 1;
                             return a.name.localeCompare(b.name);
                         }) as lang (lang.code)}
-                            <li class="!list-none">
+                            <li class="!list-none mb-0.5">
                                 <label>
                                     <input
                                         type="checkbox"
@@ -172,45 +205,35 @@
             {/each}
         {/if}
     </section>
+
+    <section>
+        <h2>Sections</h2>
+        {#each Object.entries($userSettings.sectionSettings) as [sectionName, currentSetting]}
+            <div
+                class="flex justify-between items-center h-10 mb-2 py-2 border-b border-dashed border-gray-200"
+            >
+                <label
+                    for={`section-${sectionName}`}
+                    class="flex-grow text-nowrap !font-bold h-8 mr-4 w-52"
+                >
+                    {sectionName.replace(/_/g, ' ')}
+                </label>
+                <select
+                    id={`section-${sectionName}`}
+                    value={currentSetting}
+                    onchange={(e) =>
+                        updateSectionSetting(
+                            sectionName,
+                            (e.target as HTMLSelectElement)
+                                .value as SectionSetting
+                        )}
+                    class="p-1 h-8 items-center rounded border border-gray-300"
+                >
+                    {#each sectionOptions as option}
+                        <option value={option.value}>{option.label}</option>
+                    {/each}
+                </select>
+            </div>
+        {/each}
+    </section>
 </article>
-
-<style>
-    .language-group {
-        margin-bottom: 1em;
-        border: 1px solid #eee;
-        padding: 0.5em;
-        border-radius: 4px;
-    }
-
-    .language-group summary {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .language-group summary h3 {
-        margin: 0;
-        flex-grow: 1;
-    }
-
-    .language-group ul {
-        list-style: none;
-        padding: 0;
-        margin-top: 0.5em;
-    }
-
-    .language-group li {
-        margin-bottom: 0.2em;
-    }
-
-    .language-group button {
-        margin-left: 0.5em;
-        padding: 0.2em 0.5em;
-        cursor: pointer;
-    }
-
-    .language-group:not([open]) summary button {
-        display: none;
-    }
-</style>
