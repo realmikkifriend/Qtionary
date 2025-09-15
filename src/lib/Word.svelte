@@ -1,8 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    let { word = '' } = $props();
+    let { word: initialWord = '' } = $props();
 
+    let word = $state(initialWord);
     let wordData: any = $state(null);
     let loading = $state(true);
     let errorMessage = $state('');
@@ -10,12 +11,34 @@
     let activeTab: string = $state('');
 
     onMount(() => {
+        const handleUrlChange = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const newWord = urlParams.get('word');
+            if (newWord && newWord !== word) {
+                word = newWord;
+                fetchWordData(word);
+            } else if (!newWord && word) {
+                word = '';
+                wordData = null;
+                languages = [];
+                activeTab = '';
+                errorMessage = 'No word provided.';
+                loading = false;
+            }
+        };
+
+        window.addEventListener('urlchange', handleUrlChange);
+
         if (word) {
             fetchWordData(word);
         } else {
             errorMessage = 'No word provided.';
             loading = false;
         }
+
+        return () => {
+            window.removeEventListener('urlchange', handleUrlChange);
+        };
     });
 
     async function fetchWordData(wordName: string) {
@@ -53,6 +76,28 @@
         if (!parserOutput) {
             return;
         }
+
+        const links = doc.querySelectorAll('a');
+        links.forEach((link) => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('/wiki/')) {
+                const wordParam = href.replace('/wiki/', '').split('#')[0];
+                link.setAttribute('href', 'javascript:void(0)');
+                link.setAttribute(
+                    'onclick',
+                    `
+                    event.preventDefault();
+                    const url = new window.URL(window.location.href);
+                    url.searchParams.set('word', '${wordParam}');
+                    window.history.pushState({}, '', url.origin + url.pathname + url.search);
+                    window.dispatchEvent(new CustomEvent('urlchange'));
+                `
+                );
+            } else {
+                const textNode = doc.createTextNode(link.textContent || '');
+                link.parentNode?.replaceChild(textNode, link);
+            }
+        });
 
         const children = Array.from(parserOutput.children);
 
