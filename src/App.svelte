@@ -4,7 +4,9 @@
 
     let searchTerm = $state('');
     let searchResults: any[] = $state([]);
+    let totalHits = $state(0);
     let loading = $state(false);
+    let errorMessage = $state('');
     let searchInput: HTMLInputElement | undefined = $state();
     let lastSearchedTerm = $state('');
 
@@ -29,9 +31,12 @@
             );
             const data = await response.json();
             searchResults = data.query.search;
+            totalHits = data.query.searchinfo.totalhits;
             lastSearchedTerm = term;
-        } catch (error) {
+            errorMessage = '';
+        } catch (error: any) {
             console.error('Error fetching from Wiktionary:', error);
+            errorMessage = 'Failed to fetch results. Are you offline?';
         } finally {
             loading = false;
         }
@@ -70,43 +75,51 @@
 </script>
 
 <main class="container">
-    <hgroup>
+    <hgroup class="flex items-baseline">
         <h1>Qtionary</h1>
         <h2>Wiktionary Search</h2>
     </hgroup>
 
-    <input
-        type="search"
-        id="search"
-        name="search"
-        placeholder="search Wiktionary..."
-        bind:value={searchTerm}
-        bind:this={searchInput}
-        aria-label="Search"
-    />
+    <div class="relative flex items-center">
+        {#if searchResults.length > 0}
+            <h6 class="absolute right-4">
+                {totalHits > 10 ? '10+' : searchResults.length} results
+            </h6>
+        {/if}
+        <input
+            type="search"
+            id="search"
+            name="search"
+            placeholder="search Wiktionary..."
+            bind:value={searchTerm}
+            bind:this={searchInput}
+            aria-label="Search"
+        />
+    </div>
 
-    {#if loading}
-        <p aria-busy="true">Searching...</p>
-    {:else if searchResults.length > 0}
-        <article>
-            <hgroup>
-                <h3>Search Results ({searchResults.length})</h3>
-            </hgroup>
-            <ul style="list-style: none; padding-left: 0;">
+    <article>
+        {#if loading}
+            <p aria-busy="true">Searching...</p>
+        {:else if searchResults.length > 0}
+            <ul class="py-3 px-6">
                 {#each searchResults as result (result.pageid)}
-                    <li>
+                    <li class="!list-none">
                         <a
                             href="https://en.wiktionary.org/wiki/{result.title}"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            <strong>{result.title}</strong>
+                            {result.title}
                         </a>
                     </li>
                 {/each}
             </ul>
-        </article>
-    {:else if searchTerm.length >= 3 && !loading}
-        <p>No results found for "{searchTerm}".</p>
-    {/if}
+        {:else if errorMessage}
+            <p class="!text-red-600">{errorMessage}</p>
+        {:else if searchTerm.length >= 3 && !loading}
+            <p class="!text-orange-300">
+                No results found for <strong>{searchTerm}</strong>...
+            </p>
+        {/if}
+    </article>
 </main>
