@@ -75,6 +75,13 @@
             initialQuery = undefined;
         }
     });
+
+    function handleResultClick(title: string) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('word', title);
+        window.history.pushState({}, '', url.toString());
+        window.dispatchEvent(new CustomEvent('urlchange'));
+    }
 </script>
 
 <div class="relative flex items-center">
@@ -96,18 +103,14 @@
 
 <article>
     {#if loading}
-        <p class="p-3" aria-busy="true">Searching...</p>
+        <p aria-busy="true">Searching...</p>
     {:else if searchResults.length > 0}
-        <ul class="py-3 px-6">
+        <ul class="px-6">
             {#each searchResults as result (result.pageid)}
                 <li class="!list-none">
-                    <a
-                        href="https://en.wiktionary.org/wiki/{result.title}"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
+                    <option onclick={() => handleResultClick(result.title)}>
                         {result.title}
-                    </a>
+                    </option>
                 </li>
             {/each}
         </ul>
