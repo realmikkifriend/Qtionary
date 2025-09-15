@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     base: './',
@@ -10,6 +11,7 @@ export default defineConfig({
         host: true
     },
     plugins: [
+        tailwindcss(),
         svelte(),
         mkcert({
             hosts: ['localhost', '127.0.0.1', '192.168.0.231']
