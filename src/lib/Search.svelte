@@ -98,6 +98,11 @@
         bind:value={searchTerm}
         bind:this={searchInput}
         aria-label="Search"
+        onkeydown={(e) => {
+            if (e.key === 'Enter' && searchResults.length > 0) {
+                handleResultClick(searchResults[0].title);
+            }
+        }}
     />
 </div>
 
