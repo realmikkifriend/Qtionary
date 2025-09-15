@@ -42,6 +42,9 @@ h1 {
     font-size: 2.5em;
     line-height: 1.1;
 }
+h2 {
+    font-size: 1em;
+}
 
 option {
     cursor: pointer;
@@ -121,6 +124,29 @@ button[role='tab'] {
 .word-content :global(a) {
     color: var(--primary);
     text-decoration: underline;
+}
+
+.language-group {
+    margin-bottom: 1rem;
+}
+
+.language-group h3 {
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+    font-size: 1.1em;
+}
+
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+.error {
+    color: var(--error-color);
 }
 
 @media (prefers-color-scheme: light) {
