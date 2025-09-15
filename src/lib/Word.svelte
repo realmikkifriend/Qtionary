@@ -6,6 +6,8 @@
     let wordData: any = $state(null);
     let loading = $state(true);
     let errorMessage = $state('');
+    let languages: { name: string; content: string }[] = $state([]);
+    let activeTab: string = $state('');
 
     onMount(() => {
         if (word) {
@@ -27,6 +29,7 @@
 
             if (data.parse) {
                 wordData = data.parse;
+                parseLanguageSections(wordData.text);
             } else if (data.error) {
                 errorMessage = `Error: ${data.error.info}`;
             } else {
@@ -37,6 +40,45 @@
             errorMessage = 'Failed to fetch word data. Are you offline?';
         } finally {
             loading = false;
+        }
+    }
+
+    function parseLanguageSections(htmlText: string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const extractedLanguages: { name: string; content: string }[] = [];
+        let currentLanguage: { name: string; content: string } | null = null;
+
+        const parserOutput = doc.querySelector('.mw-parser-output');
+        if (!parserOutput) {
+            return;
+        }
+
+        const children = Array.from(parserOutput.children);
+
+        for (const node of children) {
+            if (node.matches('.mw-heading2')) {
+                const h2 = node.querySelector('h2');
+                if (h2) {
+                    if (currentLanguage) {
+                        extractedLanguages.push(currentLanguage);
+                    }
+                    currentLanguage = {
+                        name: h2.textContent || 'Unknown',
+                        content: ''
+                    };
+                }
+            } else if (currentLanguage) {
+                currentLanguage.content += node.outerHTML;
+            }
+        }
+
+        if (currentLanguage) {
+            extractedLanguages.push(currentLanguage);
+        }
+        languages = extractedLanguages;
+        if (languages.length > 0) {
+            activeTab = languages[0].name;
         }
     }
 
@@ -57,61 +99,34 @@
     {:else if wordData}
         <hgroup>
             <h1>{wordData.title}</h1>
-            <!-- {#if wordData.langlinks && wordData.langlinks.length > 0}
-                <h2>
-                    Available in:
-                    {#each wordData.langlinks as link}
-                        <a href={link.url} target="_blank" rel="noreferrer"
-                            >{link.langname}</a
-                        >{', '}
-                    {/each}
-                </h2>
-            {/if} -->
         </hgroup>
 
-        <div class="word-content">
-            {@html wordData.text}
-        </div>
-
-        <!-- {#if wordData.categories && wordData.categories.length > 0}
-            <footer>
-                <h3>Categories:</h3>
-                <ul>
-                    {#each wordData.categories as category}
-                        <li>{category.category}</li>
-                    {/each}
-                </ul>
-            </footer>
-        {/if} -->
+        {#if languages.length > 0}
+            <div role="tablist" class="tabs flex gap-0.5">
+                {#each languages as lang}
+                    <button
+                        role="tab"
+                        aria-selected={activeTab === lang.name}
+                        class="tab"
+                        class:tab-active={activeTab === lang.name}
+                        onclick={() => (activeTab = lang.name)}
+                    >
+                        {lang.name}
+                    </button>
+                {/each}
+            </div>
+            {#each languages as lang}
+                {#if activeTab === lang.name}
+                    <div
+                        role="tabpanel"
+                        class="word-content p-4 border-t border-base-300"
+                    >
+                        {@html lang.content}
+                    </div>
+                {/if}
+            {/each}
+        {/if}
     {:else}
         <p>No information available for "{word}".</p>
     {/if}
 </article>
-
-<style>
-    .word-content :global(h2) {
-        font-size: 1.5em;
-        margin-top: 1em;
-        margin-bottom: 0.5em;
-    }
-    .word-content :global(h3) {
-        font-size: 1.2em;
-        margin-top: 0.8em;
-        margin-bottom: 0.4em;
-    }
-    .word-content :global(p) {
-        margin-bottom: 0.5em;
-    }
-    .word-content :global(ol),
-    .word-content :global(ul) {
-        margin-left: 1.5em;
-        margin-bottom: 0.5em;
-    }
-    .word-content :global(li) {
-        list-style-type: disc;
-    }
-    .word-content :global(a) {
-        color: var(--primary);
-        text-decoration: underline;
-    }
-</style>
