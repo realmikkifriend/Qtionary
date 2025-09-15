@@ -1,5 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { userSettings } from './stores';
+    import { get } from 'svelte/store';
 
     interface Language {
         code: string;
@@ -32,7 +34,14 @@
               )
             : {}
     );
-    let selectedLanguages: Record<string, boolean> = $state({});
+    let selectedLanguages: Record<string, boolean> = $state(
+        Object.fromEntries(
+            get(userSettings).displayLanguages.map((langName: string) => [
+                langName,
+                true
+            ])
+        )
+    );
     let loading = $state(true);
     let error: string | null = $state(null);
 
@@ -46,6 +55,14 @@
             }
             const data = await response.json();
             languages = data.query.languages;
+
+            const currentDisplayLanguages = get(userSettings).displayLanguages;
+            selectedLanguages = Object.fromEntries(
+                languages.map((lang) => [
+                    lang.code,
+                    currentDisplayLanguages.includes(lang.name)
+                ])
+            );
         } catch (e: any) {
             error = e.message;
         } finally {
@@ -58,14 +75,45 @@
             ...selectedLanguages,
             [code]: !selectedLanguages[code]
         };
+        userSettings.update((settings: { displayLanguages: string[] }) => {
+            const languageName = languages.find((l) => l.code === code)?.name;
+            if (languageName) {
+                if (selectedLanguages[code]) {
+                    settings.displayLanguages.push(languageName);
+                } else {
+                    settings.displayLanguages =
+                        settings.displayLanguages.filter(
+                            (name) => name !== languageName
+                        );
+                }
+            }
+            return settings;
+        });
     }
 
     function selectAll(langs: Language[], select: boolean) {
         const newSelection = { ...selectedLanguages };
+        const updatedDisplayLanguages: string[] = [];
         for (const lang of langs) {
             newSelection[lang.code] = select;
+            if (select) {
+                updatedDisplayLanguages.push(lang.name);
+            }
         }
         selectedLanguages = newSelection;
+        userSettings.update((settings: { displayLanguages: string[] }) => {
+            settings.displayLanguages = select
+                ? [
+                      ...new Set([
+                          ...settings.displayLanguages,
+                          ...updatedDisplayLanguages
+                      ])
+                  ]
+                : settings.displayLanguages.filter(
+                      (name) => !langs.some((l) => l.name === name)
+                  );
+            return settings;
+        });
     }
 </script>
 
@@ -100,14 +148,18 @@
                         >
                     </summary>
                     <ul>
-                        {#each langs.sort( (a, b) => a.name.localeCompare(b.name) ) as lang}
+                        {#each langs.sort((a, b) => {
+                            const aChecked = selectedLanguages[a.code];
+                            const bChecked = selectedLanguages[b.code];
+                            if (aChecked && !bChecked) return -1;
+                            if (!aChecked && bChecked) return 1;
+                            return a.name.localeCompare(b.name);
+                        }) as lang (lang.code)}
                             <li class="!list-none">
                                 <label>
                                     <input
                                         type="checkbox"
-                                        bind:checked={
-                                            selectedLanguages[lang.code]
-                                        }
+                                        checked={selectedLanguages[lang.code]}
                                         onchange={() =>
                                             toggleLanguage(lang.code)}
                                     />

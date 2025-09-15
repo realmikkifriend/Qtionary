@@ -2,7 +2,7 @@
     import { debounce } from 'lodash';
     import { onMount } from 'svelte';
 
-    let { initialQuery = '' } = $props();
+    let { initialQuery }: { initialQuery?: string } = $props();
 
     let searchTerm = $state('');
     let searchResults: any[] = $state([]);

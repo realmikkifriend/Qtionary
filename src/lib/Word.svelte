@@ -1,5 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { userSettings } from './stores';
+    import { get } from 'svelte/store';
 
     let { word: initialWord = '' } = $props();
 
@@ -122,6 +124,10 @@
             extractedLanguages.push(currentLanguage);
         }
         languages = extractedLanguages;
+        const currentSettings = get(userSettings);
+        languages = extractedLanguages.filter((lang) =>
+            currentSettings.displayLanguages.includes(lang.name)
+        );
         if (languages.length > 0) {
             activeTab = languages[0].name;
         }
