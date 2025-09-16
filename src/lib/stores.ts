@@ -88,8 +88,9 @@ export const userSettings = resettablePersisted<UserSettings>('userSettings', {
     sectionSettings: {
         Etymology: 'always-show',
         Pronunciation: 'hide',
-        Conjugation: 'always-show',
+        Quick_conjugation: 'collapsible-closed',
         Anagrams: 'hide',
+        Conjugation: 'collapsible-closed',
         Further_reading: 'hide',
         References: 'hide'
     }

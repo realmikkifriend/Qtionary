@@ -96,6 +96,17 @@ function wrapSections(parserOutput: Element, doc: Document) {
 }
 
 function processHeadwordLine(doc: Document) {
+    const sectionSettings = get(userSettings).sectionSettings;
+    const quickConjugationSetting =
+        sectionSettings.Quick_conjugation || 'always-show';
+
+    if (quickConjugationSetting === 'hide') {
+        doc.querySelectorAll('.headword-line').forEach((headwordLine) => {
+            headwordLine.remove();
+        });
+        return;
+    }
+
     doc.querySelectorAll('.word-sense-content').forEach((sense) => {
         const headwordLine = sense.querySelector('.headword-line');
         if (!headwordLine) return;
@@ -130,7 +141,7 @@ function processHeadwordLine(doc: Document) {
                     meaning += '<br /><em>("I ___ed")</em>';
                 } else if (meaning === 'past participle') {
                     meaning += '<em>("I have ___ed")</em>';
-                    conjugation = '[haber] ' + conjugation;
+                    conjugation = conjugation;
                 }
 
                 const row = doc.createElement('tr');
@@ -151,6 +162,18 @@ function processHeadwordLine(doc: Document) {
                 sense.prepend(table);
             }
 
+            if (quickConjugationSetting.startsWith('collapsible')) {
+                const details = doc.createElement('details');
+                details.classList.add('float-right');
+                details.open = quickConjugationSetting === 'collapsible-open';
+                const summary = doc.createElement('summary');
+                summary.classList.add('float-right', 'text-xs', '!mb-1');
+                summary.textContent = 'Quick Conjugation Table';
+                details.appendChild(summary);
+                table.parentNode?.insertBefore(details, table);
+                details.appendChild(table);
+            }
+
             headwordLine.remove();
         }
     });
@@ -168,7 +191,6 @@ function processUsageLabelSense(doc: Document) {
             const anchorTags = usageLabelSense.querySelectorAll(
                 '.ib-content.label-content a'
             );
-            console.log(anchorTags);
             anchorTags.forEach((anchor) => {
                 const tag = doc.createElement('span');
                 tag.classList.add('usage-tag');
