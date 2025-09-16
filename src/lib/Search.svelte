@@ -1,6 +1,7 @@
 <script lang="ts">
     import { debounce } from 'lodash';
     import { onMount } from 'svelte';
+    import { searchWiktionary as searchWiktionaryFromApi } from '../helper/api';
 
     let { initialQuery }: { initialQuery?: string } = $props();
 
@@ -26,19 +27,15 @@
         loading = true;
         searchResults = [];
         try {
-            const response = await fetch(
-                `https://en.wiktionary.org/w/api.php?` +
-                    `action=query&format=json&list=search&` +
-                    `formatversion=2&srsearch=${term}&srnamespace=0&srlimit=10&origin=*`
-            );
-            const data = await response.json();
-            searchResults = data.query.search;
-            totalHits = data.query.searchinfo.totalhits;
+            const data = await searchWiktionaryFromApi(term);
+            searchResults = data.search;
+            totalHits = data.searchinfo.totalhits;
             lastSearchedTerm = term;
             errorMessage = '';
         } catch (error: any) {
             console.error('Error fetching from Wiktionary:', error);
-            errorMessage = 'Failed to fetch results. Are you offline?';
+            errorMessage =
+                error.message || 'Failed to fetch results. Are you offline?';
         } finally {
             loading = false;
         }

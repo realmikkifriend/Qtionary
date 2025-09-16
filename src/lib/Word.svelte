@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { userSettings, type SectionSetting } from './stores';
     import { get } from 'svelte/store';
+    import { fetchWordData as fetchWordDataFromApi } from '../helper/api';
 
     let { word: initialWord = '' } = $props();
 
@@ -47,22 +48,18 @@
         loading = true;
         errorMessage = '';
         try {
-            const response = await fetch(
-                `https://en.wiktionary.org/w/api.php?action=parse&format=json&page=${wordName}&pst=1&disableeditsection=1&disabletoc=1&formatversion=2&origin=*`
-            );
-            const data = await response.json();
+            const data = await fetchWordDataFromApi(wordName);
 
-            if (data.parse) {
-                wordData = data.parse;
+            if (data) {
+                wordData = data;
                 parseLanguageSections(wordData.text);
-            } else if (data.error) {
-                errorMessage = `Error: ${data.error.info}`;
             } else {
                 errorMessage = 'No data found for this word.';
             }
         } catch (error: any) {
             console.error('Error fetching word data:', error);
-            errorMessage = 'Failed to fetch word data. Are you offline?';
+            errorMessage =
+                error.message || 'Failed to fetch word data. Are you offline?';
         } finally {
             loading = false;
         }
@@ -263,6 +260,13 @@
 </article>
 
 <style>
+    button[role='tab'] {
+        border-radius: 0.5rem 0.5rem 0 0;
+        background-color: var(--pico-muted-color);
+    }
+    .tab-active {
+        background-color: #535bf2 !important;
+    }
     .word-content :global(h3) {
         font-size: 1.8em;
     }
