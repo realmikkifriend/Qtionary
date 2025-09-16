@@ -147,4 +147,23 @@
         color: var(--primary);
         text-decoration: underline;
     }
+    .word-content :global(.headword-table) {
+        float: right;
+        margin-bottom: 1em;
+        border-collapse: collapse;
+        font-size: 0.8em;
+        max-width: 20rem;
+    }
+    .word-content :global(.headword-table th),
+    .word-content :global(.headword-table td) {
+        border: 1px solid var(--pico-muted-border-color);
+        padding: 0.3em 0.6em;
+    }
+    .word-content :global(.headword-table th) {
+        font-weight: bolder;
+        background-color: var(--pico-muted-background-color);
+    }
+    .word-content :global(.word-sense-content) {
+        position: relative;
+    }
 </style>

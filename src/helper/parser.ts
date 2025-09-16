@@ -95,6 +95,67 @@ function wrapSections(parserOutput: Element, doc: Document) {
     }
 }
 
+function processHeadwordLine(doc: Document) {
+    doc.querySelectorAll('.word-sense-content').forEach((sense) => {
+        const headwordLine = sense.querySelector('.headword-line');
+        if (!headwordLine) return;
+
+        const table = doc.createElement('table');
+        table.classList.add('headword-table');
+        const tbody = doc.createElement('tbody');
+
+        const headerRow = doc.createElement('tr');
+        const th1 = doc.createElement('th');
+        th1.textContent = 'Tense (Meaning)';
+        const th2 = doc.createElement('th');
+        th2.textContent = 'Conjugation';
+        headerRow.appendChild(th1);
+        headerRow.appendChild(th2);
+        tbody.appendChild(headerRow);
+
+        const content = headwordLine.innerHTML;
+
+        const conjugationPairRegex =
+            /<i\b[^>]*>([\s\S]*?)<\/i>\s*<b\b[^>]*>\s*(?:<a\b[^>]*>)?([\s\S]*?)(?:<\/a>)?\s*<\/b>/gi;
+        const matches = [...content.matchAll(conjugationPairRegex)];
+
+        if (matches.length > 0) {
+            matches.forEach((match) => {
+                let meaning = match[1].replace(/<.*?>/g, '').trim();
+                let conjugation = match[2].replace(/<.*?>/g, '').trim();
+
+                if (meaning === 'first-person singular present') {
+                    meaning += ' <em>("I ___")</em>';
+                } else if (meaning === 'first-person singular preterite') {
+                    meaning += ' <em>("I ___ed")</em>';
+                } else if (meaning === 'past participle') {
+                    meaning += ' <em>("I have ___ed")</em>';
+                    conjugation = '[haber] ' + conjugation;
+                }
+
+                const row = doc.createElement('tr');
+                const td1 = doc.createElement('td');
+                td1.innerHTML = meaning;
+                const td2 = doc.createElement('td');
+                td2.textContent = conjugation;
+                row.appendChild(td1);
+                row.appendChild(td2);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            const h3Element = sense.querySelector('h3');
+            if (h3Element) {
+                h3Element.after(table);
+            } else {
+                sense.prepend(table);
+            }
+
+            headwordLine.remove();
+        }
+    });
+}
+
 export function parseLanguageSections(htmlText: string): {
     languages: { name: string; content: string }[];
     activeTab: string;
@@ -143,6 +204,7 @@ export function parseLanguageSections(htmlText: string): {
     }
 
     wrapSections(parserOutput, doc);
+    processHeadwordLine(doc);
 
     node = parserOutput.firstElementChild;
     while (node) {
