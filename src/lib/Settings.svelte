@@ -3,6 +3,14 @@
     import { userSettings, resetAllStores } from './stores';
     import { get } from 'svelte/store';
     import type { SectionSetting } from './stores';
+    import {
+        toggleLanguage,
+        selectAll,
+        updateSectionSetting,
+        handleDragStart,
+        handleDragOver,
+        handleDragEnd
+    } from '../helper/settingsHelper';
 
     interface Language {
         code: string;
@@ -80,65 +88,6 @@
         }
     });
 
-    function toggleLanguage(code: string) {
-        selectedLanguages = {
-            ...selectedLanguages,
-            [code]: !selectedLanguages[code]
-        };
-        userSettings.update((settings) => {
-            const languageName = languages.find((l) => l.code === code)?.name;
-            if (languageName) {
-                if (selectedLanguages[code]) {
-                    settings.displayLanguages.push(languageName);
-                } else {
-                    settings.displayLanguages =
-                        settings.displayLanguages.filter(
-                            (name) => name !== languageName
-                        );
-                }
-            }
-            return settings;
-        });
-    }
-
-    function selectAll(langs: Language[], select: boolean) {
-        const newSelection = { ...selectedLanguages };
-        const updatedDisplayLanguages: string[] = [];
-        for (const lang of langs) {
-            newSelection[lang.code] = select;
-            if (select) {
-                updatedDisplayLanguages.push(lang.name);
-            }
-        }
-        selectedLanguages = newSelection;
-        userSettings.update((settings) => {
-            settings.displayLanguages = select
-                ? [
-                      ...new Set([
-                          ...settings.displayLanguages,
-                          ...updatedDisplayLanguages
-                      ])
-                  ]
-                : settings.displayLanguages.filter(
-                      (name) => !langs.some((l) => l.name === name)
-                  );
-            return settings;
-        });
-    }
-
-    function updateSectionSetting(
-        sectionName: string,
-        setting: SectionSetting
-    ) {
-        userSettings.update((settings) => {
-            settings.sectionSettings = {
-                ...settings.sectionSettings,
-                [sectionName]: setting
-            };
-            return settings;
-        });
-    }
-
     let orderedDisplayLanguages: Language[] = $state([]);
     let draggingIndex: number | null = $state(null);
 
@@ -150,29 +99,53 @@
         }
     });
 
-    function handleDragStart(index: number) {
-        draggingIndex = index;
+    function handleToggleLanguage(code: string) {
+        toggleLanguage(
+            code,
+            selectedLanguages,
+            languages,
+            (newSelectedLanguages) => {
+                selectedLanguages = newSelectedLanguages;
+            }
+        );
     }
 
-    function handleDragOver(event: DragEvent, index: number) {
-        event.preventDefault();
-        if (draggingIndex === null || draggingIndex === index) return;
-
-        const newOrder = [...orderedDisplayLanguages];
-        const [draggedItem] = newOrder.splice(draggingIndex, 1);
-        newOrder.splice(index, 0, draggedItem);
-
-        orderedDisplayLanguages = newOrder;
-        draggingIndex = index; // Update draggingIndex to reflect the new position
+    function handleSelectAll(langs: Language[], select: boolean) {
+        selectAll(
+            langs,
+            select,
+            selectedLanguages,
+            (newSelectedLanguages) => {
+                selectedLanguages = newSelectedLanguages;
+            },
+            languages
+        );
     }
 
-    function handleDragEnd() {
-        draggingIndex = null;
-        userSettings.update((settings) => {
-            settings.displayLanguages = orderedDisplayLanguages.map(
-                (lang) => lang.name
-            );
-            return settings;
+    function handleDragStartWrapper(index: number) {
+        handleDragStart(index, (newIndex) => {
+            draggingIndex = newIndex;
+        });
+    }
+
+    function handleDragOverWrapper(event: DragEvent, index: number) {
+        handleDragOver(
+            event,
+            index,
+            draggingIndex,
+            orderedDisplayLanguages,
+            (newOrder) => {
+                orderedDisplayLanguages = newOrder;
+            },
+            (newIndex) => {
+                draggingIndex = newIndex;
+            }
+        );
+    }
+
+    function handleDragEndWrapper() {
+        handleDragEnd(orderedDisplayLanguages, (newIndex) => {
+            draggingIndex = newIndex;
         });
     }
 </script>
@@ -205,14 +178,14 @@
                                 class="ml-2 py-0 px-0.5 !text-xs text-nowrap cursor-pointer"
                                 onclick={(event: Event) => {
                                     event.preventDefault();
-                                    selectAll(langs, true);
+                                    handleSelectAll(langs, true);
                                 }}>Select All</button
                             >
                             <button
                                 class="l-2 py-0 px-0.5 !text-xs text-nowrap cursor-pointer"
                                 onclick={(event: Event) => {
                                     event.preventDefault();
-                                    selectAll(langs, false);
+                                    handleSelectAll(langs, false);
                                 }}>Unselect All</button
                             >
                         {/if}
@@ -231,7 +204,7 @@
                                         type="checkbox"
                                         checked={selectedLanguages[lang.code]}
                                         onchange={() =>
-                                            toggleLanguage(lang.code)}
+                                            handleToggleLanguage(lang.code)}
                                     />
                                     {lang.name} ({lang.code})
                                 </label>
@@ -255,9 +228,10 @@
                     <li
                         class="flex items-center py-0 px-1 mb-1 border border-gray-200 rounded cursor-grab"
                         draggable="true"
-                        ondragstart={() => handleDragStart(index)}
-                        ondragover={(event) => handleDragOver(event, index)}
-                        ondragend={handleDragEnd}
+                        ondragstart={() => handleDragStartWrapper(index)}
+                        ondragover={(event) =>
+                            handleDragOverWrapper(event, index)}
+                        ondragend={handleDragEndWrapper}
                         class:dragging={index === draggingIndex}
                     >
                         <span class="text-gray-500 h-full mx-1 pb-1"
