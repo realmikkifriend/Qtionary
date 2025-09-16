@@ -14,6 +14,26 @@
     let languages: { name: string; content: string }[] = $state([]);
     let activeTab: string = $state('');
 
+    let orderedLanguages: () => { name: string; content: string }[] = $derived(
+        () => {
+            const settings = get(userSettings);
+            const displayOrder = settings.displayLanguages;
+
+            const languageMap = new Map(
+                languages.map((lang) => [lang.name, lang])
+            );
+
+            const filteredAndOrdered = displayOrder
+                .map((langName) => languageMap.get(langName))
+                .filter(
+                    (lang): lang is { name: string; content: string } =>
+                        lang !== undefined
+                );
+
+            return filteredAndOrdered;
+        }
+    );
+
     onMount(() => {
         const handleUrlChange = () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -55,7 +75,14 @@
                 wordData = data;
                 const parsed = parseLanguageSections(wordData.text);
                 languages = parsed.languages;
-                activeTab = parsed.activeTab;
+                if (orderedLanguages().length > 0) {
+                    const initialActiveTab = parsed.activeTab;
+                    if (orderedLanguages().length > 0) {
+                        activeTab = orderedLanguages()[0].name;
+                    }
+                } else {
+                    activeTab = '';
+                }
             } else {
                 errorMessage = 'No data found for this word.';
             }
@@ -87,9 +114,9 @@
             <h1>{wordData.title}</h1>
         </hgroup>
 
-        {#if languages.length > 0}
+        {#if orderedLanguages().length > 0}
             <div role="tablist" class="tabs flex gap-0.5">
-                {#each languages as lang}
+                {#each orderedLanguages() as lang}
                     <button
                         role="tab"
                         aria-selected={activeTab === lang.name}
@@ -101,7 +128,7 @@
                     </button>
                 {/each}
             </div>
-            {#each languages as lang}
+            {#each orderedLanguages() as lang}
                 {#if activeTab === lang.name}
                     <div
                         role="tabpanel"

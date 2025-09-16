@@ -138,6 +138,43 @@
             return settings;
         });
     }
+
+    let orderedDisplayLanguages: Language[] = $state([]);
+    let draggingIndex: number | null = $state(null);
+
+    $effect(() => {
+        if (languages.length > 0) {
+            orderedDisplayLanguages = $userSettings.displayLanguages
+                .map((langName) => languages.find((l) => l.name === langName))
+                .filter((lang): lang is Language => lang !== undefined);
+        }
+    });
+
+    function handleDragStart(index: number) {
+        draggingIndex = index;
+    }
+
+    function handleDragOver(event: DragEvent, index: number) {
+        event.preventDefault();
+        if (draggingIndex === null || draggingIndex === index) return;
+
+        const newOrder = [...orderedDisplayLanguages];
+        const [draggedItem] = newOrder.splice(draggingIndex, 1);
+        newOrder.splice(index, 0, draggedItem);
+
+        orderedDisplayLanguages = newOrder;
+        draggingIndex = index; // Update draggingIndex to reflect the new position
+    }
+
+    function handleDragEnd() {
+        draggingIndex = null;
+        userSettings.update((settings) => {
+            settings.displayLanguages = orderedDisplayLanguages.map(
+                (lang) => lang.name
+            );
+            return settings;
+        });
+    }
 </script>
 
 <article>
@@ -206,6 +243,33 @@
         {/if}
     </section>
 
+    <section class="mt-8">
+        <h2>Language Display Order</h2>
+        {#if loading}
+            <p>Loading languages...</p>
+        {:else if error}
+            <p class="error">Error: {error}</p>
+        {:else}
+            <ul class="list-none p-0">
+                {#each orderedDisplayLanguages as lang, index (lang.code)}
+                    <li
+                        class="flex items-center py-0 px-1 mb-1 border border-gray-200 rounded cursor-grab"
+                        draggable="true"
+                        ondragstart={() => handleDragStart(index)}
+                        ondragover={(event) => handleDragOver(event, index)}
+                        ondragend={handleDragEnd}
+                        class:dragging={index === draggingIndex}
+                    >
+                        <span class="text-gray-500 h-full mx-1 pb-1"
+                            >&#9776;</span
+                        >
+                        {lang.name} ({lang.code})
+                    </li>
+                {/each}
+            </ul>
+        {/if}
+    </section>
+
     <section>
         <h2>Sections</h2>
         {#each Object.entries($userSettings.sectionSettings) as [sectionName, currentSetting]}
@@ -237,3 +301,10 @@
         {/each}
     </section>
 </article>
+
+<style>
+    .dragging {
+        opacity: 0.5;
+        border: 2px dashed #007bff;
+    }
+</style>
