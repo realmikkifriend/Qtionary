@@ -197,6 +197,49 @@
         background-color: var(--color-red-600);
     }
 
+    .word-content :global(details[id^='Translations-']),
+    .word-content :global(div[id^='Translations-']) {
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border-radius: 0.25rem;
+    }
+    .word-content :global(details[id^='Translations-']) {
+        background-color: var(--pico-progress-background-color);
+    }
+    .word-content :global(div[id^='Translations-']) {
+        background-color: var(--pico-card-sectioning-background-color);
+    }
+    .word-content :global(.summary-content-container) {
+        flex-direction: row;
+        display: flex;
+        gap: 0.25rem;
+    }
+    .word-content :global(details[id^='Translations-'] summary) {
+        flex-direction: column;
+        align-items: start;
+    }
+    .word-content :global(details[id^='Translations-'] summary::after) {
+        position: absolute;
+        right: 1.25rem;
+    }
+    .word-content :global(details[id^='Translations-'] table) {
+        margin-bottom: 0;
+    }
+    .word-content :global(details[id^='Translations-'] td) {
+        background-color: transparent;
+    }
+
+    .word-content
+        :global(details[id^='Translations-'] * .displayed-translation) {
+        margin-top: 1rem;
+    }
+
+    .word-content :global(ol * ul),
+    .word-content :global(ol * dl),
+    .word-content :global(dd) {
+        display: none;
+    }
+
     .word-content :global(.NavContent) {
         font-size: 0.8em;
     }

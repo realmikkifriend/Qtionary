@@ -43,8 +43,11 @@ export function processHeading(
     if (setting.startsWith('collapsible')) {
         const details = doc.createElement('details');
         details.open = setting === 'collapsible-open';
+        details.id = sectionName;
         const summary = doc.createElement('summary');
-        summary.innerHTML = heading.outerHTML;
+        const container = doc.createElement('div');
+        container.innerHTML = heading.outerHTML;
+        summary.appendChild(container);
         details.appendChild(summary);
 
         let tempSibling = nextNode;
@@ -211,5 +214,93 @@ export function processUsageLabelSense(doc: Document) {
 
             usageLabelSense.remove();
         });
+    });
+}
+
+export function processTranslationCollapsibility(doc: Document): void {
+    const { displayLanguages } = get(userSettings);
+
+    const translationFrames = doc.querySelectorAll(
+        '.NavFrame[id^="Translations-"]'
+    );
+
+    translationFrames.forEach((frame) => {
+        const navHead = frame.querySelector('.NavHead');
+        const navContent = frame.querySelector('.NavContent');
+
+        if (!navHead || !navContent) return;
+
+        const details = doc.createElement('details');
+        details.id = frame.id;
+        details.open = false;
+
+        const summary = doc.createElement('summary');
+        const summaryContentContainer = doc.createElement('div');
+        summaryContentContainer.classList.add('summary-content-container');
+
+        const originalNavHeadContent = navHead.innerHTML;
+        const navHeadTextContent = navHead.textContent || '';
+        const usageSenseMatch = navHeadTextContent.match(/^\s*\(([^)]+)\)/);
+
+        if (usageSenseMatch) {
+            const usageSense = usageSenseMatch[1];
+            const usageLabel = doc.createElement('div');
+            usageLabel.classList.add('usage-tags');
+            const tag = doc.createElement('span');
+            tag.classList.add('usage-tag');
+            tag.textContent = usageSense;
+            tag.setAttribute('aria-label', usageSense);
+            tag.setAttribute('data-content', usageSense.toLowerCase());
+            usageLabel.appendChild(tag);
+            summaryContentContainer.appendChild(usageLabel);
+        }
+
+        const container = doc.createElement('div');
+        container.innerHTML = originalNavHeadContent.replace(
+            /^\s*\(<i[^>]*>[^<]*<\/i>\)\s*/,
+            ''
+        );
+        summaryContentContainer.appendChild(container);
+        summary.appendChild(summaryContentContainer);
+        details.appendChild(summary);
+
+        const translationMap = new Map<string, string>();
+        const translationListItems = navContent.querySelectorAll('li');
+
+        translationListItems.forEach((li) => {
+            const languageMatch = li.textContent?.match(/^([A-Za-z]+):/);
+            if (languageMatch) {
+                const language = languageMatch[1];
+                if (displayLanguages.includes(language)) {
+                    const anchorElement = li.querySelector('a');
+                    let translationContent: string;
+
+                    if (anchorElement) {
+                        translationContent = anchorElement.outerHTML;
+                    } else {
+                        translationContent =
+                            li.textContent?.replace(/^[A-Za-z]+:\s*/, '') || '';
+                    }
+
+                    translationMap.set(language, translationContent);
+                }
+            }
+        });
+
+        displayLanguages.forEach((language) => {
+            if (translationMap.has(language)) {
+                const translationText = translationMap.get(language) || '';
+                const translationSpan = doc.createElement('span');
+                translationSpan.classList.add('displayed-translation');
+                translationSpan.innerHTML = `<strong>${language}:</strong> ${translationText}`;
+                summary.appendChild(translationSpan);
+            }
+        });
+
+        while (navContent.firstChild) {
+            details.appendChild(navContent.firstChild);
+        }
+
+        frame.replaceWith(details);
     });
 }

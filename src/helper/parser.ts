@@ -4,7 +4,8 @@ import {
     processHeading,
     wrapSections,
     processHeadwordLine,
-    processUsageLabelSense
+    processUsageLabelSense,
+    processTranslationCollapsibility
 } from './documentProcessor';
 
 function processHtmlText(htmlText: string): {
@@ -192,6 +193,7 @@ export function parseLanguageSections(htmlText: string): {
     processLinks(doc);
     processHeadings(doc, sectionSettings);
     processDocumentSections(doc);
+    processTranslationCollapsibility(doc);
 
     const extractedLanguages = extractLanguages(doc);
     const { filteredLanguages, activeTab } =
