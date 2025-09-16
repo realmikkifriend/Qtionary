@@ -26,7 +26,14 @@ export const searchWiktionary = debounce(async (term: string) => {
     searchResults.set([]);
     try {
         const data = await searchWiktionaryFromApi(term);
-        searchResults.set(data.search);
+        const sortedResults = data.search.sort((a: any, b: any) => {
+            const aMatch = a.title === term;
+            const bMatch = b.title === term;
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+            return 0;
+        });
+        searchResults.set(sortedResults);
         totalHits.set(data.searchinfo.totalhits);
         lastSearchedTerm.set(term);
         errorMessage.set('');
