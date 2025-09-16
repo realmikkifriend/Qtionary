@@ -10,9 +10,26 @@
 
     function updateFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('q');
-        const wordParam = urlParams.get('word');
-        const viewParam = urlParams.get('view');
+        const protocolUrl = urlParams.get('url');
+        let effectiveQueryParams = urlParams;
+
+        if (protocolUrl) {
+            try {
+                const decodedUrl = decodeURIComponent(protocolUrl);
+                const searchPart = decodedUrl.split('://')[1];
+                if (searchPart) {
+                    effectiveQueryParams = new URLSearchParams(
+                        searchPart.split('?')[1]
+                    );
+                }
+            } catch (e) {
+                console.error('Error decoding protocol URL:', e);
+            }
+        }
+
+        const query = effectiveQueryParams.get('q');
+        const wordParam = effectiveQueryParams.get('word');
+        const viewParam = effectiveQueryParams.get('view');
 
         if (viewParam === 'settings') {
             currentView = 'settings';
