@@ -147,6 +147,16 @@
         color: var(--primary);
         text-decoration: underline;
     }
+
+    .word-content :global(.NavContent) {
+        font-size: 0.8em;
+    }
+    .word-content :global(.NavContent * td),
+    .word-content :global(.NavContent * th) {
+        max-width: 18rem;
+        width: fit-content;
+    }
+
     .word-content :global(.headword-table) {
         float: right;
         margin-bottom: 1em;
