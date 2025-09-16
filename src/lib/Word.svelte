@@ -68,6 +68,66 @@
         }
     }
 
+    function handleHeading(
+        node: Element,
+        nextNode: Element | null,
+        doc: Document,
+        sectionSettings: { [key: string]: SectionSetting }
+    ): { nextNodeForLoop: Element | null; contentToAdd: string | null } {
+        const heading = node.querySelector('h3, h4');
+        if (!heading) {
+            return { nextNodeForLoop: nextNode, contentToAdd: node.outerHTML };
+        }
+
+        const sectionName = heading.id;
+        let setting: SectionSetting = 'always-show';
+        for (const key in sectionSettings) {
+            if (sectionName.startsWith(key)) {
+                setting = sectionSettings[key];
+                break;
+            }
+        }
+
+        if (setting === 'hide') {
+            node.remove();
+            let tempNode = nextNode;
+            while (
+                tempNode &&
+                !tempNode.matches('.mw-heading2, .mw-heading3, .mw-heading4')
+            ) {
+                const toRemove = tempNode;
+                tempNode = tempNode.nextElementSibling;
+                toRemove.remove();
+            }
+            return { nextNodeForLoop: tempNode, contentToAdd: null };
+        }
+
+        if (setting.startsWith('collapsible')) {
+            const details = doc.createElement('details');
+            details.open = setting === 'collapsible-open';
+            const summary = doc.createElement('summary');
+            summary.innerHTML = heading.outerHTML;
+            details.appendChild(summary);
+
+            let tempSibling = nextNode;
+            while (
+                tempSibling &&
+                !tempSibling.matches('.mw-heading2, .mw-heading3, .mw-heading4')
+            ) {
+                const toMove = tempSibling;
+                tempSibling = tempSibling.nextElementSibling;
+                details.appendChild(toMove);
+            }
+            node.replaceWith(details);
+            return {
+                nextNodeForLoop: tempSibling,
+                contentToAdd: details.outerHTML
+            };
+        }
+
+        return { nextNodeForLoop: nextNode, contentToAdd: node.outerHTML };
+    }
+
     function parseLanguageSections(htmlText: string) {
         const modifiedHtmlText = htmlText.replace(/\btright\b/g, 'float-right');
         const parser = new DOMParser();
@@ -105,8 +165,6 @@
 
         let node = parserOutput.firstElementChild;
         while (node) {
-            const nextNode = node.nextElementSibling;
-
             if (node.matches('.mw-heading2')) {
                 const h2 = node.querySelector('h2');
                 if (h2) {
@@ -118,70 +176,28 @@
                         content: ''
                     };
                 }
-            } else if (node.matches('.mw-heading3')) {
-                const h3 = node.querySelector('h3');
-                if (h3) {
-                    const sectionName = h3.id;
-                    let setting: SectionSetting = 'always-show';
-                    for (const key in sectionSettings) {
-                        if (sectionName.startsWith(key)) {
-                            setting = sectionSettings[key];
-                            break;
-                        }
-                    }
-                    console.log(sectionName);
-                    console.log(sectionSettings);
-                    console.log(setting);
+                node = node.nextElementSibling;
+                continue;
+            }
 
-                    if (setting === 'hide') {
-                        node.remove();
-                        let tempNode = nextNode;
-                        while (
-                            tempNode &&
-                            !tempNode.matches('.mw-heading2') &&
-                            !tempNode.matches('.mw-heading3')
-                        ) {
-                            const toRemove = tempNode;
-                            tempNode = tempNode.nextElementSibling;
-                            toRemove.remove();
-                        }
-                        node = tempNode;
-                        continue;
-                    }
-
-                    if (setting.startsWith('collapsible')) {
-                        const details = doc.createElement('details');
-                        details.open = setting === 'collapsible-open';
-                        const summary = doc.createElement('summary');
-                        summary.innerHTML = h3.outerHTML;
-                        details.appendChild(summary);
-
-                        let tempSibling = nextNode;
-                        while (
-                            tempSibling &&
-                            !tempSibling.matches('.mw-heading2') &&
-                            !tempSibling.matches('.mw-heading3')
-                        ) {
-                            const toMove = tempSibling;
-                            tempSibling = tempSibling.nextElementSibling;
-                            details.appendChild(toMove);
-                        }
-                        node.replaceWith(details);
-                        node = details;
-                        if (currentLanguage) {
-                            currentLanguage.content += node.outerHTML;
-                        }
-                        node = tempSibling;
-                        continue;
-                    }
+            if (node.matches('.mw-heading3') || node.matches('.mw-heading4')) {
+                const result = handleHeading(
+                    node,
+                    node.nextElementSibling,
+                    doc,
+                    sectionSettings
+                );
+                if (currentLanguage && result.contentToAdd) {
+                    currentLanguage.content += result.contentToAdd;
                 }
-                if (currentLanguage) {
-                    currentLanguage.content += node.outerHTML;
-                }
-            } else if (currentLanguage) {
+                node = result.nextNodeForLoop;
+                continue;
+            }
+
+            if (currentLanguage) {
                 currentLanguage.content += node.outerHTML;
             }
-            node = nextNode;
+            node = node.nextElementSibling;
         }
 
         if (currentLanguage) {
@@ -234,7 +250,7 @@
                 {#if activeTab === lang.name}
                     <div
                         role="tabpanel"
-                        class="word-content p-4 border-t border-base-300"
+                        class="word-content pt-4 border-t border-base-300"
                     >
                         {@html lang.content}
                     </div>
@@ -245,3 +261,24 @@
         <p>No information available for "{word}".</p>
     {/if}
 </article>
+
+<style>
+    .word-content :global(h3) {
+        font-size: 1.8em;
+    }
+    .word-content :global(p) {
+        margin-bottom: 0.5em;
+    }
+    .word-content :global(ol),
+    .word-content :global(ul) {
+        margin-left: 1.5em;
+        margin-bottom: 0.5em;
+    }
+    .word-content :global(li) {
+        list-style-type: disc;
+    }
+    .word-content :global(a) {
+        color: var(--primary);
+        text-decoration: underline;
+    }
+</style>
