@@ -125,11 +125,11 @@ function processHeadwordLine(doc: Document) {
                 let conjugation = match[2].replace(/<.*?>/g, '').trim();
 
                 if (meaning === 'first-person singular present') {
-                    meaning += ' <em>("I ___")</em>';
+                    meaning += '<br /><em>("I ___")</em>';
                 } else if (meaning === 'first-person singular preterite') {
-                    meaning += ' <em>("I ___ed")</em>';
+                    meaning += '<br /><em>("I ___ed")</em>';
                 } else if (meaning === 'past participle') {
-                    meaning += ' <em>("I have ___ed")</em>';
+                    meaning += '<em>("I have ___ed")</em>';
                     conjugation = '[haber] ' + conjugation;
                 }
 
@@ -153,6 +153,36 @@ function processHeadwordLine(doc: Document) {
 
             headwordLine.remove();
         }
+    });
+}
+
+function processUsageLabelSense(doc: Document) {
+    doc.querySelectorAll('.word-sense-content').forEach((sense) => {
+        const usageLabelSenses = sense.querySelectorAll('.usage-label-sense');
+        if (usageLabelSenses.length === 0) return;
+
+        usageLabelSenses.forEach((usageLabelSense) => {
+            const tagsContainer = doc.createElement('div');
+            tagsContainer.classList.add('usage-tags');
+
+            const anchorTags = usageLabelSense.querySelectorAll(
+                '.ib-content.label-content a'
+            );
+            console.log(anchorTags);
+            anchorTags.forEach((anchor) => {
+                const tag = doc.createElement('span');
+                tag.classList.add('usage-tag');
+                const textContent = anchor.textContent || '';
+                tag.textContent = textContent;
+                tag.setAttribute('aria-label', textContent);
+                tag.setAttribute('data-content', textContent.toLowerCase());
+                tagsContainer.appendChild(tag);
+            });
+
+            usageLabelSense.after(tagsContainer);
+
+            usageLabelSense.remove();
+        });
     });
 }
 
@@ -205,6 +235,7 @@ export function parseLanguageSections(htmlText: string): {
 
     wrapSections(parserOutput, doc);
     processHeadwordLine(doc);
+    processUsageLabelSense(doc);
 
     node = parserOutput.firstElementChild;
     while (node) {

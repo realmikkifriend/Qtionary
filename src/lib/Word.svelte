@@ -143,9 +143,30 @@
     .word-content :global(li) {
         list-style-type: disc;
     }
+
     .word-content :global(a) {
         color: var(--primary);
         text-decoration: underline;
+    }
+
+    .word-content :global(.usage-tags) {
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+    }
+    .word-content :global(.usage-tag) {
+        background-color: var(--color-purple-500);
+        border-radius: 2rem;
+        padding: 0 0.3rem;
+        font-weight: bolder;
+        font-size: 0.65em;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        max-height: 1rem;
+    }
+
+    .word-content :global(.usage-tag[data-content='archaic']) {
+        background-color: var(--color-red-600);
     }
 
     .word-content :global(.NavContent) {
@@ -175,5 +196,9 @@
     }
     .word-content :global(.word-sense-content) {
         position: relative;
+    }
+    .word-content :global(dl) {
+        display: block;
+        width: 100%;
     }
 </style>
