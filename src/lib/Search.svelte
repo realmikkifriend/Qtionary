@@ -15,16 +15,9 @@
     let searchInput: HTMLInputElement | undefined = $state();
 
     $effect(() => {
-        let currentSearchTerm = '';
-        searchTerm.subscribe((value) => (currentSearchTerm = value))();
-        let currentLastSearchedTerm = '';
-        lastSearchedTerm.subscribe(
-            (value) => (currentLastSearchedTerm = value)
-        )();
-
-        if (currentSearchTerm !== currentLastSearchedTerm) {
-            updateUrl(currentSearchTerm);
-            searchWiktionary(currentSearchTerm);
+        if ($searchTerm !== $lastSearchedTerm) {
+            updateUrl($searchTerm);
+            searchWiktionary($searchTerm);
         }
     });
 
