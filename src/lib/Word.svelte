@@ -234,6 +234,19 @@
         margin-top: 1rem;
     }
 
+    .word-content :global(.thumbinner) {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--pico-card-background-color);
+        max-width: 10rem !important;
+        padding: 0.5rem;
+        gap: 0.75rem;
+    }
+    .word-content :global(.tsingle) {
+        max-width: 9rem !important;
+        font-size: 0.75em;
+    }
+
     .word-content :global(ol * ul),
     .word-content :global(ol * dl),
     .word-content :global(dd) {
