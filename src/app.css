@@ -114,7 +114,9 @@ select {
     color: var(--error-color);
 }
 
-.was-wotd {
+.was-wotd,
+.sister-project,
+.mw-empty-elt {
     display: none;
 }
 

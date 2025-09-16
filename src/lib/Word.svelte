@@ -155,6 +155,7 @@
     .word-content :global(h3) {
         font-size: 1.8em;
         border-bottom: 1px solid var(--pico-muted-color);
+        width: 100%;
     }
     .word-content :global(p) {
         margin-bottom: 0.5em;

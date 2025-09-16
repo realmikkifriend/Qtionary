@@ -120,27 +120,84 @@ function filterLanguages(languages: { name: string; content: string }[]): {
     return { filteredLanguages, activeTab };
 }
 
+function processWordSenseContents(
+    filteredLanguages: { name: string; content: string }[]
+): void {
+    filteredLanguages.forEach((lang) => {
+        const tempParser = new DOMParser();
+        const tempDoc = tempParser.parseFromString(lang.content, 'text/html');
+        const wordSenseContents = tempDoc.querySelectorAll(
+            '.word-sense-content'
+        );
+
+        if (wordSenseContents.length > 1) {
+            const hasEtymology = Array.from(wordSenseContents).some((sense) => {
+                const heading = sense.querySelector('h3, h4');
+                return (
+                    heading &&
+                    heading.id &&
+                    (heading.id.startsWith('Etymology') ||
+                        heading.id.startsWith('Noun') ||
+                        heading.id.startsWith('Verb'))
+                );
+            });
+
+            if (!(wordSenseContents.length === 2 && hasEtymology)) {
+                wordSenseContents.forEach((sense) => {
+                    const details = tempDoc.createElement('details');
+                    details.open = false;
+
+                    const summary = tempDoc.createElement('summary');
+                    const heading = sense.querySelector('h3, h4');
+                    if (heading) {
+                        summary.innerHTML = heading.outerHTML;
+                        heading.remove();
+                    } else {
+                        summary.textContent = 'Sense';
+                    }
+                    details.appendChild(summary);
+
+                    while (sense.firstChild) {
+                        details.appendChild(sense.firstChild);
+                    }
+
+                    sense.replaceWith(details);
+                });
+            }
+        }
+        lang.content = tempDoc.body.innerHTML;
+    });
+}
+
+function initializeDocument(htmlText: string): {
+    doc: Document;
+    sectionSettings: any;
+    parserOutput: Element | null;
+} {
+    const { doc, sectionSettings } = processHtmlText(htmlText);
+    const parserOutput = doc.querySelector('.mw-parser-output');
+    return { doc, sectionSettings, parserOutput };
+}
+
 export function parseLanguageSections(htmlText: string): {
     languages: { name: string; content: string }[];
     activeTab: string;
 } {
-    const { doc, sectionSettings } = processHtmlText(htmlText);
+    const { doc, sectionSettings, parserOutput } = initializeDocument(htmlText);
 
-    const parserOutput = doc.querySelector('.mw-parser-output');
     if (!parserOutput) {
         return { languages: [], activeTab: '' };
     }
 
     processLinks(doc);
-
     processHeadings(doc, sectionSettings);
-
     processDocumentSections(doc);
 
     const extractedLanguages = extractLanguages(doc);
-
     const { filteredLanguages, activeTab } =
         filterLanguages(extractedLanguages);
+
+    processWordSenseContents(filteredLanguages);
 
     return { languages: filteredLanguages, activeTab };
 }

@@ -70,7 +70,13 @@ export function processHeading(
 export function wrapSections(parserOutput: Element, doc: Document) {
     let node = parserOutput.firstElementChild;
     while (node) {
-        if (node.matches('.mw-heading3')) {
+        if (
+            node.matches('.mw-heading3') ||
+            (node.matches('.mw-heading4') &&
+                node.querySelector('h4')?.id.startsWith('Noun')) ||
+            (node.matches('.mw-heading4') &&
+                node.querySelector('h4')?.id.startsWith('Verb'))
+        ) {
             const contentDiv = doc.createElement('div');
             contentDiv.classList.add('word-sense-content');
 
@@ -82,7 +88,7 @@ export function wrapSections(parserOutput: Element, doc: Document) {
 
             while (
                 tempSibling &&
-                !tempSibling.matches('.mw-heading2, .mw-heading3')
+                !tempSibling.matches('.mw-heading2, .mw-heading3, .mw-heading4')
             ) {
                 const toMove = tempSibling;
                 tempSibling = tempSibling.nextElementSibling;
