@@ -1,0 +1,41 @@
+import { debounce } from 'lodash';
+import { writable } from 'svelte/store';
+import { searchWiktionary as searchWiktionaryFromApi } from './api';
+
+export const searchTerm = writable('');
+export const searchResults = writable<any[]>([]);
+export const totalHits = writable(0);
+export const loading = writable(false);
+export const errorMessage = writable('');
+export const lastSearchedTerm = writable('');
+
+export const searchWiktionary = debounce(async (term: string) => {
+    if (term.length < 3) {
+        searchResults.set([]);
+        lastSearchedTerm.set(term);
+        return;
+    }
+
+    let lastTerm = '';
+    lastSearchedTerm.subscribe((value) => (lastTerm = value))();
+    if (term === lastTerm) {
+        return;
+    }
+
+    loading.set(true);
+    searchResults.set([]);
+    try {
+        const data = await searchWiktionaryFromApi(term);
+        searchResults.set(data.search);
+        totalHits.set(data.searchinfo.totalhits);
+        lastSearchedTerm.set(term);
+        errorMessage.set('');
+    } catch (error: any) {
+        console.error('Error fetching from Wiktionary:', error);
+        errorMessage.set(
+            error.message || 'Failed to fetch results. Are you offline?'
+        );
+    } finally {
+        loading.set(false);
+    }
+}, 500);
