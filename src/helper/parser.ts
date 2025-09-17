@@ -8,6 +8,18 @@ import {
     processTranslationCollapsibility
 } from './documentProcessor';
 
+const h4Prefixes = [
+    'Adjective',
+    'Article',
+    'Adverb',
+    'Conjunction',
+    'Interjection',
+    'Noun',
+    'Preposition',
+    'Pronoun',
+    'Verb'
+];
+
 function processHtmlText(htmlText: string): {
     doc: Document;
     sectionSettings: any;
@@ -50,7 +62,13 @@ function processHeadings(doc: Document, sectionSettings: any): void {
 
     let node = parserOutput.firstElementChild;
     while (node) {
-        if (node.matches('.mw-heading3') || node.matches('.mw-heading4')) {
+        if (
+            node.matches('.mw-heading3') ||
+            (node.matches('.mw-heading4') &&
+                h4Prefixes.some((prefix) =>
+                    node?.querySelector('h4')?.id.startsWith(prefix)
+                ))
+        ) {
             node = processHeading(node, doc, sectionSettings);
         } else {
             node = node.nextElementSibling;
@@ -138,8 +156,9 @@ function processWordSenseContents(
                     heading &&
                     heading.id &&
                     (heading.id.startsWith('Etymology') ||
-                        heading.id.startsWith('Noun') ||
-                        heading.id.startsWith('Verb'))
+                        h4Prefixes.some((prefix) =>
+                            heading.id.startsWith(prefix)
+                        ))
                 );
             });
 

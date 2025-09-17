@@ -72,13 +72,25 @@ export function processHeading(
 
 export function wrapSections(parserOutput: Element, doc: Document) {
     let node = parserOutput.firstElementChild;
+    const h4Prefixes = [
+        'Adjective',
+        'Article',
+        'Adverb',
+        'Conjunction',
+        'Interjection',
+        'Noun',
+        'Preposition',
+        'Pronoun',
+        'Verb'
+    ];
+
     while (node) {
         if (
             node.matches('.mw-heading3') ||
             (node.matches('.mw-heading4') &&
-                node.querySelector('h4')?.id.startsWith('Noun')) ||
-            (node.matches('.mw-heading4') &&
-                node.querySelector('h4')?.id.startsWith('Verb'))
+                h4Prefixes.some((prefix) =>
+                    node?.querySelector('h4')?.id.startsWith(prefix)
+                ))
         ) {
             const contentDiv = doc.createElement('div');
             contentDiv.classList.add('word-sense-content');
