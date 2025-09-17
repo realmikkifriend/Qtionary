@@ -53,7 +53,15 @@ export default defineConfig({
                         protocol: 'web+qtionary',
                         url: '/?url=%s'
                     }
-                ]
+                ],
+                share_target: {
+                    action: '/?q=%s',
+                    method: 'GET',
+                    enctype: 'application/x-www-form-urlencoded',
+                    params: {
+                        text: 'q'
+                    }
+                }
             }
         })
     ]
