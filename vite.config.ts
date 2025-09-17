@@ -22,8 +22,8 @@ export default defineConfig({
                 enabled: true
             },
             manifest: {
-                name: 'QDictionary Wiktionary Wrapper',
-                short_name: 'QDictionary',
+                name: 'Qtionary Wiktionary Wrapper',
+                short_name: 'Qtionary',
                 start_url: './',
                 id: '/',
                 display: 'standalone',
