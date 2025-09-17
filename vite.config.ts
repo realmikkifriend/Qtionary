@@ -59,7 +59,9 @@ export default defineConfig({
                     method: 'GET',
                     enctype: 'application/x-www-form-urlencoded',
                     params: {
-                        text: 'q'
+                        title: 'Qtionary',
+                        text: 'q',
+                        url: 'link'
                     }
                 }
             }
