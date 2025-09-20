@@ -50,11 +50,15 @@
 
     $effect(() => {
         updateFromUrl();
+        const handlePopstate = () => {
+            updateFromUrl();
+            window.dispatchEvent(new Event('urlchange'));
+        };
         window.addEventListener('urlchange', updateFromUrl);
-        window.addEventListener('popstate', updateFromUrl);
+        window.addEventListener('popstate', handlePopstate);
         return () => {
             window.removeEventListener('urlchange', updateFromUrl);
-            window.removeEventListener('popstate', updateFromUrl);
+            window.removeEventListener('popstate', handlePopstate);
         };
     });
 </script>
