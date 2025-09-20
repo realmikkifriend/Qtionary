@@ -62,7 +62,7 @@
 <main class="container">
     <hgroup class="flex items-baseline">
         <h1>Qtionary</h1>
-        <h2>Wiktionary Search</h2>
+        <h2 class="invisible xs:visible">Wiktionary Search</h2>
         <nav class="absolute right-3">
             <a
                 href={currentView === 'settings' ? '/' : '?view=settings'}

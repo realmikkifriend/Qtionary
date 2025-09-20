@@ -2,6 +2,10 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
 
+@theme {
+    --breakpoint-xs: 30rem;
+}
+
 :root {
     font-family: 'Atkinson Hyperlegible Next Variable', sans-serif;
     line-height: 1.5;
