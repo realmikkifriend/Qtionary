@@ -6,6 +6,7 @@
     import { fetchWordData as fetchWordDataFromApi } from '../helper/api';
     import { parseLanguageSections } from '../helper/parser';
     import './styles/word.css';
+    import './styles/tags.css';
 
     let { word: initialWord = '' } = $props();
 

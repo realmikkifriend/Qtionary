@@ -51,26 +51,6 @@ button[role='tab'] {
     text-decoration: underline;
 }
 
-.word-content * .usage-tags {
-    display: flex;
-    gap: 0.25rem;
-    align-items: center;
-}
-.word-content * .usage-tag {
-    background-color: var(--color-purple-500);
-    border-radius: 2rem;
-    padding: 0 0.3rem;
-    font-weight: bolder;
-    font-size: 0.65em;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    max-height: 1rem;
-}
-
-.word-content * .usage-tag[data-content='archaic'] {
-    background-color: var(--color-red-600);
-}
-
 .word-content * details[id^='Translations-'],
 .word-content * div[id^='Translations-'] {
     padding: 0.5rem;

@@ -1,0 +1,65 @@
+/* https://en.wiktionary.org/wiki/Module:labels/data */
+
+.word-content * .usage-tags {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+.word-content * .usage-tag {
+    background-color: var(--color-gray-700);
+    border-radius: 2rem;
+    padding: 0 0.3rem;
+    font-weight: bolder;
+    font-size: 0.65em;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    max-height: 1rem;
+}
+
+.word-content * .usage-tag[data-content*='emphatic'] {
+    background-color: var(--color-sky-700);
+}
+
+.word-content * .usage-tag[data-content*='idiom'],
+.word-content * .usage-tag[data-content*='colloquial'],
+.word-content * .usage-tag[data-content*='slang'],
+.word-content * .usage-tag[data-content*='onomatopoeia'],
+.word-content * .usage-tag[data-content*='euphem'],
+.word-content * .usage-tag[data-content*='simile'] {
+    background-color: var(--color-purple-700);
+}
+
+.word-content * .usage-tag[data-content*='archaic'],
+.word-content * .usage-tag[data-content*='obsolete'],
+.word-content * .usage-tag[data-content*='historic'],
+.word-content * .usage-tag[data-content*='dated'],
+.word-content * .usage-tag[data-content*='old'],
+.word-content * .usage-tag[data-content*='rare'],
+.word-content * .usage-tag[data-content*='misspelling'],
+.word-content * .usage-tag[data-content*='non-native'],
+.word-content * .usage-tag[data-content*='minced'],
+.word-content * .usage-tag[data-content*='nonstandard'],
+.word-content * .usage-tag[data-content*='proscribed'] {
+    background-color: var(--color-orange-700);
+}
+
+.word-content * .usage-tag[data-content*='only'],
+.word-content * .usage-tag[data-content*='formal'],
+.word-content * .usage-tag[data-content*='familiar'],
+.word-content * .usage-tag[data-content*='technical'],
+.word-content * .usage-tag[data-content*='jargon'],
+.word-content * .usage-tag[data-content*='uncommon'] {
+    background-color: var(--color-yellow-700);
+}
+
+.word-content * .usage-tag[data-content~='derogatory'],
+.word-content * .usage-tag[data-content~='vulgar'],
+.word-content * .usage-tag[data-content~='childish'],
+.word-content * .usage-tag[data-content~='anti'],
+.word-content * .usage-tag[data-content~='slur'],
+.word-content * .usage-tag[data-content~='offensive'],
+.word-content * .usage-tag[data-content~='swear'],
+.word-content * .usage-tag[data-content~='profanity'],
+.word-content * .usage-tag[data-content~='expletive'] {
+    background-color: var(--color-red-700);
+}
