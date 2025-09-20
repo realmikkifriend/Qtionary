@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { Icon, Cog6Tooth, XMark } from 'svelte-hero-icons';
     import Search from './lib/Search.svelte';
     import Word from './lib/Word.svelte';
     import Settings from './lib/Settings.svelte';
@@ -77,8 +77,13 @@
                     );
                     window.dispatchEvent(new Event('urlchange'));
                 }}
-                >{currentView === 'settings' ? 'Close settings' : 'Settings'}</a
             >
+                {#if currentView === 'settings'}
+                    <Icon src={XMark} size="24" class="stroke-red-500" />
+                {:else}
+                    <Icon src={Cog6Tooth} size="24" class="stroke-white" />
+                {/if}
+            </a>
         </nav>
     </hgroup>
 
@@ -89,4 +94,10 @@
     {:else}
         <Search {initialQuery} />
     {/if}
+
+    <footer class="relative opacity-50 text-xs bottom-0">
+        This is a hobby project and not affiliated with Wiktionary. View the <a
+            href="https://github.com/realmikkifriend/Qtionary">source code</a
+        >.
+    </footer>
 </main>
