@@ -15,6 +15,8 @@ Search and view Wiktionary entries with extra features. Can be installed as a PW
 
 For the full list of changes, see [the repo's commit log](https://github.com/realmikkifriend/Qtionary/commits/main/).
 
+-   0.0.3
+    -   in word view, hover over/tap glossary terms to see tooltip with definition
 -   0.0.2
     -   in word view, added shareable links to app and Wiktionary
     -   in word view, pages with no selected language now display a language menu and message instead of nothing
