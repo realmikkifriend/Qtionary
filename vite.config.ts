@@ -28,6 +28,7 @@ export default defineConfig({
                 id: '/',
                 display: 'standalone',
                 orientation: 'portrait',
+                background_color: '#242424',
                 // icon source https://www.flaticon.com/free-icon/dictionary_3285819
                 icons: [
                     {
