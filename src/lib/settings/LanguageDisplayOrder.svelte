@@ -13,14 +13,15 @@
     } = $props();
 
     let draggingIndex: number | null = $state(null);
+    let containerRef: HTMLElement | null = $state(null);
 
-    function handleDragStartWrapper(index: number) {
-        handleDragStart(index, (newIndex) => {
+    function handleDragStartWrapper(event: Event, index: number) {
+        handleDragStart(event, index, (newIndex) => {
             draggingIndex = newIndex;
         });
     }
 
-    function handleDragOverWrapper(event: DragEvent, index: number) {
+    function handleDragOverWrapper(event: Event, index: number) {
         handleDragOver(
             event,
             index,
@@ -31,7 +32,8 @@
             },
             (newIndex) => {
                 draggingIndex = newIndex;
-            }
+            },
+            containerRef
         );
     }
 
@@ -49,14 +51,23 @@
     {:else if error}
         <p class="error">Error: {error}</p>
     {:else}
-        <ul class="list-none p-0">
+        <ul class="list-none p-0" bind:this={containerRef}>
             {#each orderedDisplayLanguages as lang, index (lang.code)}
                 <li
                     class="flex items-center py-0 px-1 mb-1 border border-gray-200 rounded cursor-grab"
                     draggable="true"
-                    ondragstart={() => handleDragStartWrapper(index)}
+                    style="touch-action: none;"
+                    ondragstart={(event) =>
+                        handleDragStartWrapper(event, index)}
+                    ontouchstart={(event) =>
+                        handleDragStartWrapper(event, index)}
                     ondragover={(event) => handleDragOverWrapper(event, index)}
+                    ontouchmove={(event) => {
+                        event.preventDefault();
+                        handleDragOverWrapper(event, index);
+                    }}
                     ondragend={handleDragEndWrapper}
+                    ontouchend={handleDragEndWrapper}
                     class:dragging={index === draggingIndex}
                 >
                     <span class="text-gray-500 h-full mx-1 pb-1">&#9776;</span>

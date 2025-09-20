@@ -86,29 +86,69 @@ export function updateSectionSetting(
 }
 
 export function handleDragStart(
+    event: Event,
     index: number,
     setDraggingIndex: (index: number | null) => void
 ) {
+    if (event.type === 'touchstart') {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     setDraggingIndex(index);
 }
 
 export function handleDragOver(
-    event: DragEvent,
+    event: Event,
     index: number,
     draggingIndex: number | null,
     orderedDisplayLanguages: Language[],
     setOrderedDisplayLanguages: (newOrder: Language[]) => void,
-    setDraggingIndex: (index: number | null) => void
+    setDraggingIndex: (index: number | null) => void,
+    containerRef: HTMLElement | null
 ) {
     event.preventDefault();
-    if (draggingIndex === null || draggingIndex === index) return;
+    if (draggingIndex === null || !containerRef) return;
 
-    const newOrder = [...orderedDisplayLanguages];
-    const [draggedItem] = newOrder.splice(draggingIndex, 1);
-    newOrder.splice(index, 0, draggedItem);
+    let clientY: number | undefined;
+    if (event.type === 'touchmove' && (event as TouchEvent).touches) {
+        clientY = (event as TouchEvent).touches[0].clientY;
+    } else if (event.type === 'dragover' && (event as DragEvent).clientY) {
+        clientY = (event as DragEvent).clientY;
+    }
 
-    setOrderedDisplayLanguages(newOrder);
-    setDraggingIndex(index);
+    if (clientY === undefined) return;
+
+    let targetIndex = draggingIndex;
+    const children = containerRef.children;
+
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i] as HTMLElement;
+        const rect = child.getBoundingClientRect();
+
+        if (clientY >= rect.top && clientY <= rect.bottom) {
+            targetIndex = i;
+            break;
+        }
+
+        if (clientY < rect.top) {
+            targetIndex = i;
+            break;
+        }
+    }
+
+    targetIndex = Math.max(
+        0,
+        Math.min(targetIndex, orderedDisplayLanguages.length - 1)
+    );
+
+    if (targetIndex !== draggingIndex) {
+        const newOrder = [...orderedDisplayLanguages];
+        const [draggedItem] = newOrder.splice(draggingIndex, 1);
+        newOrder.splice(targetIndex, 0, draggedItem);
+
+        setOrderedDisplayLanguages(newOrder);
+        setDraggingIndex(targetIndex);
+    }
 }
 
 export function handleDragEnd(
