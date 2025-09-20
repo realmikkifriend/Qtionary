@@ -15,11 +15,18 @@
     let errorMessage = $state('');
     let languages: { name: string; content: string }[] = $state([]);
     let activeTab: string = $state('');
+    let temporaryDisplayLanguages: string[] = $state([]);
+    let languageDropdown: HTMLDetailsElement | null = $state(null);
 
     let orderedLanguages: () => { name: string; content: string }[] = $derived(
         () => {
             const settings = get(userSettings);
-            const displayOrder = settings.displayLanguages;
+            const displayOrder = [
+                ...new Set([
+                    ...settings.displayLanguages,
+                    ...temporaryDisplayLanguages
+                ])
+            ];
 
             const languageMap = new Map(
                 languages.map((lang) => [lang.name, lang])
@@ -33,6 +40,22 @@
                 );
 
             return filteredAndOrdered;
+        }
+    );
+
+    let otherLanguages: () => { name: string; content: string }[] = $derived(
+        () => {
+            const settings = get(userSettings);
+            const combinedDisplayOrder = [
+                ...new Set([
+                    ...settings.displayLanguages,
+                    ...temporaryDisplayLanguages
+                ])
+            ];
+            const filteredOthers = languages.filter(
+                (lang) => !combinedDisplayOrder.includes(lang.name)
+            );
+            return filteredOthers;
         }
     );
 
@@ -70,6 +93,7 @@
     async function fetchWordData(wordName: string) {
         loading = true;
         errorMessage = '';
+        temporaryDisplayLanguages = [];
         try {
             const data = await fetchWordDataFromApi(wordName);
 
@@ -78,10 +102,7 @@
                 const parsed = parseLanguageSections(wordData.text);
                 languages = parsed.languages;
                 if (orderedLanguages().length > 0) {
-                    const initialActiveTab = parsed.activeTab;
-                    if (orderedLanguages().length > 0) {
-                        activeTab = orderedLanguages()[0].name;
-                    }
+                    activeTab = orderedLanguages()[0].name;
                 } else {
                     activeTab = '';
                 }
@@ -95,6 +116,16 @@
         } finally {
             loading = false;
         }
+    }
+
+    function addTemporaryLanguage(lang: { name: string; content: string }) {
+        if (!temporaryDisplayLanguages.includes(lang.name)) {
+            temporaryDisplayLanguages = [
+                ...temporaryDisplayLanguages,
+                lang.name
+            ];
+        }
+        activeTab = lang.name;
     }
 
     function goBack() {
@@ -137,18 +168,61 @@
         </div>
 
         {#if orderedLanguages().length > 0}
-            <div role="tablist" class="tabs flex gap-0.5">
-                {#each orderedLanguages() as lang}
-                    <button
-                        role="tab"
-                        aria-selected={activeTab === lang.name}
-                        class="tab"
-                        class:tab-active={activeTab === lang.name}
-                        onclick={() => (activeTab = lang.name)}
-                    >
-                        {lang.name}
-                    </button>
-                {/each}
+            <div class="flex flex-row items-center gap-0.5">
+                <div role="tablist" class="tabs flex gap-0.5">
+                    {#each orderedLanguages() as lang}
+                        <button
+                            role="tab"
+                            aria-selected={activeTab === lang.name}
+                            class="tab"
+                            class:tab-active={activeTab === lang.name}
+                            onclick={() => (activeTab = lang.name)}
+                        >
+                            {lang.name}
+                        </button>
+                    {/each}
+                </div>
+                {#if otherLanguages().length > 0}
+                    <div class="relative dropdown-end h-10 -left-2 -top-1">
+                        <details
+                            aria-label="Select"
+                            name="select"
+                            class="dropdown p-0 max-w-32"
+                            bind:this={languageDropdown}
+                        >
+                            <summary
+                                class="!bg-transparent !border-0 w-12 !mb-0 !h-8 !m-2 !p-2"
+                            >
+                                <Icon src={GlobeAlt} size="20" />
+                            </summary>
+                            <div
+                                class="dropdown-options-container relative z-10 bg-[var(--pico-form-element-background-color)] py-1 w-fit text-nowrap"
+                            >
+                                {#each otherLanguages() as lang}
+                                    <li
+                                        class="list-none hover:cursor-pointer hover:bg-[var(--pico-primary-background)] px-3"
+                                    >
+                                        <!-- svelte-ignore a11y_missing_attribute -->
+                                        <a
+                                            onmousedown={() => {
+                                                if (languageDropdown) {
+                                                    languageDropdown.open = false;
+                                                }
+                                                addTemporaryLanguage(lang);
+                                            }}
+                                            role="option"
+                                            aria-selected="false"
+                                            tabindex="0"
+                                            class="w-full inline-block"
+                                        >
+                                            {lang.name}
+                                        </a>
+                                    </li>
+                                {/each}
+                            </div>
+                        </details>
+                    </div>
+                {/if}
             </div>
             {#each orderedLanguages() as lang}
                 {#if activeTab === lang.name}

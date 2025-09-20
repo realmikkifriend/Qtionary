@@ -6,6 +6,10 @@ button[role='tab'] {
 .tab-active {
     background-color: #535bf2 !important;
 }
+.dropdown-options-container * a {
+    color: var(--pico-dropdown-color) !important;
+}
+
 .word-content .mw-section3,
 .word-content .section-3 > summary {
     font-size: 1.8em;

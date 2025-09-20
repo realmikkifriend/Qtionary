@@ -88,23 +88,6 @@ function extractLanguages(doc: Document): { name: string; content: string }[] {
     return extractedLanguages;
 }
 
-function filterLanguages(languages: { name: string; content: string }[]): {
-    filteredLanguages: { name: string; content: string }[];
-    activeTab: string;
-} {
-    const currentSettings = get(userSettings);
-    const filteredLanguages = languages.filter((lang) =>
-        currentSettings.displayLanguages.includes(lang.name)
-    );
-
-    let activeTab = '';
-    if (filteredLanguages.length > 0) {
-        activeTab = filteredLanguages[0].name;
-    }
-
-    return { filteredLanguages, activeTab };
-}
-
 function initializeDocument(htmlText: string): {
     doc: Document;
     sectionSettings: any;
@@ -131,8 +114,17 @@ export function parseLanguageSections(htmlText: string): {
     applySectionSettings(doc);
 
     const extractedLanguages = extractLanguages(doc);
-    const { filteredLanguages, activeTab } =
-        filterLanguages(extractedLanguages);
 
-    return { languages: filteredLanguages, activeTab };
+    const currentSettings = get(userSettings);
+    let activeTab = '';
+    const firstDisplayLanguage = extractedLanguages.find((lang) =>
+        currentSettings.displayLanguages.includes(lang.name)
+    );
+    if (firstDisplayLanguage) {
+        activeTab = firstDisplayLanguage.name;
+    } else if (extractedLanguages.length > 0) {
+        activeTab = extractedLanguages[0].name;
+    }
+
+    return { languages: extractedLanguages, activeTab };
 }
