@@ -6,7 +6,7 @@
 
     let initialQuery = $state('');
     let currentWord = $state('');
-    let currentView = $state('home'); // 'home' or 'settings'
+    let currentView = $state('home');
 
     function updateFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -61,8 +61,16 @@
 
 <main class="container">
     <hgroup class="flex items-baseline">
-        <h1>Qtionary</h1>
-        <h2 class="invisible xs:visible">Wiktionary Search</h2>
+        <button
+            onclick={() => {
+                window.history.pushState({}, '', '/');
+                window.dispatchEvent(new Event('urlchange'));
+            }}
+            class="flex items-baseline !bg-transparent !p-0 !border-none"
+        >
+            <h1 class="!mb-0">Qtionary</h1>
+            <h2 class="invisible xs:visible !mb-0">Wiktionary Search</h2>
+        </button>
         <nav class="absolute right-3">
             <a
                 href={currentView === 'settings' ? '/' : '?view=settings'}
