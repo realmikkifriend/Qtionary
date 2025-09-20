@@ -29,9 +29,11 @@ function processSection(
                 ['.mw-heading2', '.mw-heading3', '.mw-heading4'],
                 doc
             );
-            sectionDiv.appendChild(
-                nextSiblingAfterNestedSection!.previousElementSibling!
-            );
+            if (nextSiblingAfterNestedSection) {
+                sectionDiv.appendChild(
+                    nextSiblingAfterNestedSection.previousElementSibling!
+                );
+            }
             tempSibling = nextSiblingAfterNestedSection;
         } else if (tempSibling.matches('.mw-heading5')) {
             const nextSiblingAfterNestedSection = processSection(
@@ -45,9 +47,11 @@ function processSection(
                 ],
                 doc
             );
-            sectionDiv.appendChild(
-                nextSiblingAfterNestedSection!.previousElementSibling!
-            );
+            if (nextSiblingAfterNestedSection) {
+                sectionDiv.appendChild(
+                    nextSiblingAfterNestedSection.previousElementSibling!
+                );
+            }
             tempSibling = nextSiblingAfterNestedSection;
         } else {
             const toMove = tempSibling;
