@@ -7,7 +7,7 @@ Search and view Wiktionary entries with extra features. Can be installed as a PW
 -   can be installed as a Progressive Web App (PWA)
 -   quick access to Wiktionary search
 -   when viewing a word, languages are separated into tabs
--   set and ordergit log origin/main..HEAD your favorite languages, filter out the rest
+-   set and order your favorite languages, filter out the rest
 -   collapsible sections for less visual clutter
 -   usage (e.g. 'obscure', 'offensive') are color-coded tags
 
