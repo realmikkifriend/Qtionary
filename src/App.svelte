@@ -3,6 +3,9 @@
     import Search from './lib/Search.svelte';
     import Word from './lib/Word.svelte';
     import Settings from './lib/Settings.svelte';
+    import { glossary } from './lib/stores';
+    import { fetchGlossary } from './helper/api';
+    import { parseGlossary } from './helper/parser';
 
     let initialQuery = $state('');
     let currentWord = $state('');
@@ -50,12 +53,22 @@
 
     $effect(() => {
         updateFromUrl();
+
+        if (Object.keys($glossary).length === 0) {
+            fetchGlossary().then((data) => {
+                const parsedGlossary = parseGlossary(data.text);
+                glossary.set(parsedGlossary);
+            });
+        }
+
         const handlePopstate = () => {
             updateFromUrl();
             window.dispatchEvent(new Event('urlchange'));
         };
+
         window.addEventListener('urlchange', updateFromUrl);
         window.addEventListener('popstate', handlePopstate);
+
         return () => {
             window.removeEventListener('urlchange', updateFromUrl);
             window.removeEventListener('popstate', handlePopstate);

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { userSettings } from '../lib/stores';
+import { userSettings, glossary } from '../lib/stores';
 import {
     wrapSections,
     applySectionSettings,
@@ -21,26 +21,63 @@ function processHtmlText(htmlText: string): {
 
 function processLinks(doc: Document): void {
     const links = doc.querySelectorAll('a');
+    const currentGlossary = get(glossary);
+
     links.forEach((link) => {
         const href = link.getAttribute('href');
-        if (href && href.startsWith('/wiki/')) {
-            const wordParam = href.replace('/wiki/', '').split('#')[0];
-            link.setAttribute('href', 'javascript:void(0)');
-            link.setAttribute(
-                'onclick',
-                `
-                event.preventDefault();
-                const url = new window.URL(window.location.href);
-                url.searchParams.set('word', '${wordParam}');
-                window.history.pushState({}, '', url.origin + url.pathname + url.search);
-                window.dispatchEvent(new CustomEvent('urlchange'));
-            `
-            );
+        if (href && href.startsWith('/wiki/Appendix:Glossary#')) {
+            const term = href.split('#')[1];
+            const definition = currentGlossary[term];
+            if (definition) {
+                const tooltipDiv = doc.createElement('div');
+                tooltipDiv.classList.add('tooltip');
+
+                const tooltipContentDiv = doc.createElement('div');
+                tooltipContentDiv.classList.add(
+                    'tooltip-content',
+                    'bg-[var(--pico-background-color)]',
+                    'max-w-56',
+                    'text-[var(--pico-h1-color)]',
+                    'p-2',
+                    'rounded-sm',
+                    'text-sm',
+                    'text-left'
+                );
+                tooltipContentDiv.innerHTML = definition;
+
+                const anchorElement = doc.createElement('a');
+                anchorElement.classList.add('!decoration-dotted');
+                anchorElement.textContent = link.textContent;
+
+                tooltipDiv.appendChild(tooltipContentDiv);
+                tooltipDiv.appendChild(anchorElement);
+
+                link.parentNode?.replaceChild(tooltipDiv, link);
+            } else {
+                setLinkOnClick(link, href);
+            }
+        } else if (href && href.startsWith('/wiki/')) {
+            setLinkOnClick(link, href);
         } else {
             const textNode = doc.createTextNode(link.textContent || '');
             link.parentNode?.replaceChild(textNode, link);
         }
     });
+}
+
+function setLinkOnClick(link: HTMLAnchorElement, href: string): void {
+    const wordParam = href.replace('/wiki/', '').split('#')[0];
+    link.setAttribute('href', 'javascript:void(0)');
+    link.setAttribute(
+        'onclick',
+        `
+        event.preventDefault();
+        const url = new window.URL(window.location.href);
+        url.searchParams.set('word', '${wordParam}');
+        window.history.pushState({}, '', url.origin + url.pathname + url.search);
+        window.dispatchEvent(new CustomEvent('urlchange'));
+    `
+    );
 }
 
 function processDocumentSections(doc: Document): void {
@@ -127,4 +164,34 @@ export function parseLanguageSections(htmlText: string): {
     }
 
     return { languages: extractedLanguages, activeTab };
+}
+
+export function parseGlossary(htmlText: string): Record<string, string> {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+
+    doc.querySelectorAll('span').forEach((span) => {
+        if (span.querySelector('div.interproject-box')) {
+            span.remove();
+        }
+    });
+
+    const glossaryData: Record<string, string> = {};
+
+    const dts = doc.querySelectorAll('dt');
+    dts.forEach((dt) => {
+        const term = dt.textContent?.trim();
+        const dd = dt.nextElementSibling;
+        if (term && dd && dd.tagName === 'DD') {
+            const tempDiv = doc.createElement('div');
+            tempDiv.innerHTML = dd.innerHTML;
+            tempDiv.querySelectorAll('a').forEach((a) => {
+                const strongElement = doc.createElement('strong');
+                strongElement.textContent = a.textContent;
+                a.parentNode?.replaceChild(strongElement, a);
+            });
+            glossaryData[term] = tempDiv.innerHTML.trim();
+        }
+    });
+    return glossaryData;
 }

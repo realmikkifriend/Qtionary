@@ -1,5 +1,6 @@
 import { writable, type Writable } from 'svelte/store';
 import { persisted } from 'svelte-persisted-store';
+import type { Glossary } from './types/types';
 
 export interface ResettableStore<T> extends Writable<T> {
     reset: () => void;
@@ -112,3 +113,7 @@ export const userSettings = resettablePersisted<UserSettings>('userSettings', {
 });
 
 registerStore(userSettings);
+
+export const glossary = resettablePersisted<Glossary>('glossary', {});
+
+registerStore(glossary);

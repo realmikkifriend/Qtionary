@@ -23,3 +23,16 @@ export async function searchWiktionary(term: string) {
     }
     return data.query;
 }
+
+export async function fetchGlossary() {
+    const response = await fetch(
+        `https://en.m.wiktionary.org/w/api.php?action=parse&format=json&page=Appendix%3AGlossary&disableeditsection=1&formatversion=2&origin=*`
+    );
+    const data = await response.json();
+
+    if (data.error) {
+        throw new Error(data.error.info);
+    }
+
+    return data.parse;
+}
