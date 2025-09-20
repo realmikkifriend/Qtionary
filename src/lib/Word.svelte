@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { get } from 'svelte/store';
-    import { Icon, MagnifyingGlass } from 'svelte-hero-icons';
+    import { Icon, MagnifyingGlass, Link, GlobeAlt } from 'svelte-hero-icons';
     import { userSettings } from './stores';
     import { fetchWordData as fetchWordDataFromApi } from '../helper/api';
     import { parseLanguageSections } from '../helper/parser';
@@ -113,9 +113,27 @@
     {:else if errorMessage}
         <p class="!text-red-600">{errorMessage}</p>
     {:else if wordData}
-        <hgroup>
-            <h1>{wordData.title}</h1>
-        </hgroup>
+        <div class="flex flex-row gap-1 items-center">
+            <hgroup class="h-8">
+                <h1>{wordData.title}</h1>
+            </hgroup>
+            <a href="https://qtionary.netlify.app/?word={word}">
+                <Icon src={Link} size="20" />
+            </a>
+            <a
+                href="https://en.wiktionary.org/wiki/{word}#{activeTab}"
+                class="relative"
+            >
+                <Icon src={Link} size="20" />
+                <Icon
+                    src={GlobeAlt}
+                    class="absolute bottom-0 right-0"
+                    size="10"
+                    solid
+                    micro
+                />
+            </a>
+        </div>
 
         {#if orderedLanguages().length > 0}
             <div role="tablist" class="tabs flex gap-0.5">
@@ -151,6 +169,7 @@
     button[role='tab'] {
         border-radius: 0.5rem 0.5rem 0 0;
         background-color: var(--pico-muted-color);
+        padding: 0.5rem 0.75rem;
     }
     .tab-active {
         background-color: #535bf2 !important;
