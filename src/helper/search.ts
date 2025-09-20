@@ -1,4 +1,3 @@
-import { debounce } from 'lodash';
 import { writable } from 'svelte/store';
 import { searchWiktionary as searchWiktionaryFromApi } from './api';
 
@@ -8,6 +7,23 @@ export const totalHits = writable(0);
 export const loading = writable(false);
 export const errorMessage = writable('');
 export const lastSearchedTerm = writable('');
+
+function debounce<T extends (...args: any[]) => void>(
+    func: T,
+    wait: number,
+    immediate?: boolean
+) {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    return function (this: any, ...args: Parameters<T>) {
+        const context = this;
+        clearTimeout(timeout!);
+        if (immediate && !timeout) func.apply(context, args);
+        timeout = setTimeout(() => {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        }, wait);
+    };
+}
 
 export const searchWiktionary = debounce(async (term: string) => {
     if (term.length < 3) {
