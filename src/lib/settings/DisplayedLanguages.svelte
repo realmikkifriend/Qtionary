@@ -1,14 +1,6 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { userSettings } from '../stores';
-    import { get } from 'svelte/store';
     import { toggleLanguage, selectAll } from '../../helper/settingsHelper';
-
-    interface Language {
-        code: string;
-        bcp47: string;
-        name: string;
-    }
+    import type { Language } from '../types/types';
 
     let {
         languages = [],

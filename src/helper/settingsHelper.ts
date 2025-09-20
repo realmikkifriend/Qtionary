@@ -1,11 +1,6 @@
 import { userSettings } from '../lib/stores';
 import type { SectionSetting } from '../lib/stores';
-
-interface Language {
-    code: string;
-    bcp47: string;
-    name: string;
-}
+import type { Language } from '../lib/types/types';
 
 export function toggleLanguage(
     code: string,
