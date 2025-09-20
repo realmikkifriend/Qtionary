@@ -4,6 +4,7 @@
         handleDragOver,
         handleDragEnd
     } from '../../helper/settingsHelper';
+    import '../styles/settings.css';
 
     let {
         orderedDisplayLanguages = [],
@@ -77,10 +78,3 @@
         </ul>
     {/if}
 </section>
-
-<style>
-    .dragging {
-        opacity: 0.5;
-        border: 2px dashed #007bff;
-    }
-</style>
