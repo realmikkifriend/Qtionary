@@ -167,8 +167,8 @@
             </a>
         </div>
 
-        {#if orderedLanguages().length > 0}
-            <div class="flex flex-row items-center gap-0.5">
+        <div class="flex flex-row items-center gap-0.5">
+            {#if orderedLanguages().length > 0}
                 <div role="tablist" class="tabs flex gap-0.5">
                     {#each orderedLanguages() as lang}
                         <button
@@ -182,59 +182,72 @@
                         </button>
                     {/each}
                 </div>
-                {#if otherLanguages().length > 0}
-                    <div class="relative dropdown-end h-10 -left-2 -top-1">
-                        <details
-                            aria-label="Select"
-                            name="select"
-                            class="dropdown p-0 max-w-32"
-                            bind:this={languageDropdown}
-                        >
-                            <summary
-                                class="!bg-transparent !border-0 w-12 !mb-0 !h-8 !m-2 !p-2"
-                            >
-                                <Icon src={GlobeAlt} size="20" />
-                            </summary>
-                            <div
-                                class="dropdown-options-container relative z-10 bg-[var(--pico-form-element-background-color)] py-1 w-fit text-nowrap"
-                            >
-                                {#each otherLanguages() as lang}
-                                    <li
-                                        class="list-none hover:cursor-pointer hover:bg-[var(--pico-primary-background)] px-3"
-                                    >
-                                        <!-- svelte-ignore a11y_missing_attribute -->
-                                        <a
-                                            onmousedown={() => {
-                                                if (languageDropdown) {
-                                                    languageDropdown.open = false;
-                                                }
-                                                addTemporaryLanguage(lang);
-                                            }}
-                                            role="option"
-                                            aria-selected="false"
-                                            tabindex="0"
-                                            class="w-full inline-block"
-                                        >
-                                            {lang.name}
-                                        </a>
-                                    </li>
-                                {/each}
-                            </div>
-                        </details>
-                    </div>
-                {/if}
-            </div>
-            {#each orderedLanguages() as lang}
-                {#if activeTab === lang.name}
-                    <div
-                        role="tabpanel"
-                        class="word-content pt-4 border-t border-base-300"
+            {/if}
+            {#if otherLanguages().length > 0}
+                <div class="relative dropdown-end h-10 -left-2 -top-1 ml-1">
+                    <details
+                        aria-label="Select"
+                        name="select"
+                        class="dropdown p-0 max-w-32"
+                        bind:this={languageDropdown}
                     >
-                        {@html lang.content}
-                    </div>
+                        <summary
+                            class="!border-0 w-10 !mx-1 !my-2 !h-8 !p-1"
+                            class:!bg-sky-500={orderedLanguages().length === 0}
+                            class:!bg-transparent={orderedLanguages().length >
+                                0}
+                        >
+                            <Icon
+                                src={GlobeAlt}
+                                class="stroke-white ml-0.5"
+                                size="20"
+                            />
+                        </summary>
+                        <div
+                            class="dropdown-options-container absolute z-10 bg-[var(--pico-form-element-background-color)] py-1 w-fit text-nowrap"
+                        >
+                            {#each otherLanguages() as lang}
+                                <li
+                                    class="list-none hover:cursor-pointer hover:bg-[var(--pico-primary-background)] px-3"
+                                >
+                                    <!-- svelte-ignore a11y_missing_attribute -->
+                                    <a
+                                        onmousedown={() => {
+                                            if (languageDropdown) {
+                                                languageDropdown.open = false;
+                                            }
+                                            addTemporaryLanguage(lang);
+                                        }}
+                                        role="option"
+                                        aria-selected="false"
+                                        tabindex="0"
+                                        class="w-full inline-block"
+                                    >
+                                        {lang.name}
+                                    </a>
+                                </li>
+                            {/each}
+                        </div>
+                    </details>
+                </div>
+
+                {#if orderedLanguages().length === 0}
+                    <span class="opacity-50 text-sm -left-2 relative">
+                        This word is not in your preferred languages...
+                    </span>
                 {/if}
-            {/each}
-        {/if}
+            {/if}
+        </div>
+        {#each orderedLanguages() as lang}
+            {#if activeTab === lang.name}
+                <div
+                    role="tabpanel"
+                    class="word-content pt-4 border-t border-base-300"
+                >
+                    {@html lang.content}
+                </div>
+            {/if}
+        {/each}
     {:else}
         <p>No information available for "{word}".</p>
     {/if}
