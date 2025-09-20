@@ -6,6 +6,8 @@
     themes: base;
 }
 
+/* https://picocss.com/docs/css-variables */
+
 @theme {
     --breakpoint-xs: 30rem;
 }
