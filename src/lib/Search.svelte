@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { Icon, XMark } from 'svelte-hero-icons';
     import {
         searchTerm,
         searchResults,
@@ -59,12 +60,11 @@
 <div class="relative flex items-center">
     {#if $searchResults.length > 0}
         <button
-            class="absolute right-4 !bg-transparent top-2 !p-0 !border-0 !shadow-none"
+            class="flex flex-row items-center gap-1 absolute right-4 !bg-transparent top-2 !p-0 !border-0 !shadow-none"
             onclick={() => searchTerm.set('')}
         >
-            {$totalHits > 10 ? '10+' : $searchResults.length} results<span
-                class="!text-red-600 ml-2">X</span
-            >
+            {$totalHits > 10 ? '10+' : $searchResults.length} results
+            <Icon src={XMark} size="24" class="stroke-red-500 mt-0.25" />
         </button>
     {/if}
     <input

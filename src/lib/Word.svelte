@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { userSettings, type SectionSetting } from './stores';
     import { get } from 'svelte/store';
+    import { Icon, MagnifyingGlass } from 'svelte-hero-icons';
+    import { userSettings } from './stores';
     import { fetchWordData as fetchWordDataFromApi } from '../helper/api';
     import { parseLanguageSections } from '../helper/parser';
 
@@ -104,7 +105,9 @@
 </script>
 
 <article>
-    <button class="absolute right-3" onclick={goBack}>&larr; Search</button>
+    <button class="absolute right-3 !p-3" onclick={goBack}>
+        <Icon src={MagnifyingGlass} size="20" />
+    </button>
     {#if loading}
         <p class="p-3" aria-busy="true">Loading "{word}"...</p>
     {:else if errorMessage}
