@@ -174,10 +174,26 @@
     .tab-active {
         background-color: #535bf2 !important;
     }
-    .word-content :global(h3) {
+    .word-content :global(h3),
+    .word-content :global(.section-3 > summary) {
         font-size: 1.8em;
         border-bottom: 1px solid var(--pico-muted-color);
         width: 100%;
+        font-weight: bold !important;
+    }
+    .word-content :global(.section-3 > summary) {
+        height: 2rem;
+    }
+    .word-content :global(.section-4 > summary) {
+        width: fit-content;
+        background-color: var(--pico-primary-background);
+        border-radius: 2rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .word-content :global(h3),
+    .word-content :global(.section-3 > summary),
+    .word-content :global(.section-4 > summary) {
+        color: var(--pico-h3-color) !important;
     }
     .word-content :global(p) {
         margin-bottom: 0.5em;
