@@ -1,24 +1,11 @@
 import { get } from 'svelte/store';
 import { userSettings } from '../lib/stores';
 import {
-    processHeading,
     wrapSections,
-    processHeadwordLine,
+    applySectionSettings,
     processUsageLabelSense,
     processTranslationCollapsibility
 } from './documentProcessor';
-
-const h4Prefixes = [
-    'Adjective',
-    'Article',
-    'Adverb',
-    'Conjunction',
-    'Interjection',
-    'Noun',
-    'Preposition',
-    'Pronoun',
-    'Verb'
-];
 
 function processHtmlText(htmlText: string): {
     doc: Document;
@@ -56,32 +43,11 @@ function processLinks(doc: Document): void {
     });
 }
 
-function processHeadings(doc: Document, sectionSettings: any): void {
-    const parserOutput = doc.querySelector('.mw-parser-output');
-    if (!parserOutput) return;
-
-    let node = parserOutput.firstElementChild;
-    while (node) {
-        if (
-            node.matches('.mw-heading3') ||
-            (node.matches('.mw-heading4') &&
-                h4Prefixes.some((prefix) =>
-                    node?.querySelector('h4')?.id.startsWith(prefix)
-                ))
-        ) {
-            node = processHeading(node, doc, sectionSettings);
-        } else {
-            node = node.nextElementSibling;
-        }
-    }
-}
-
 function processDocumentSections(doc: Document): void {
     const parserOutput = doc.querySelector('.mw-parser-output');
     if (!parserOutput) return;
 
     wrapSections(parserOutput, doc);
-    processHeadwordLine(doc);
     processUsageLabelSense(doc);
 }
 
@@ -139,56 +105,6 @@ function filterLanguages(languages: { name: string; content: string }[]): {
     return { filteredLanguages, activeTab };
 }
 
-function processWordSenseContents(
-    filteredLanguages: { name: string; content: string }[]
-): void {
-    filteredLanguages.forEach((lang) => {
-        const tempParser = new DOMParser();
-        const tempDoc = tempParser.parseFromString(lang.content, 'text/html');
-        const wordSenseContents = tempDoc.querySelectorAll(
-            '.word-sense-content'
-        );
-
-        if (wordSenseContents.length > 1) {
-            const hasEtymology = Array.from(wordSenseContents).some((sense) => {
-                const heading = sense.querySelector('h3, h4');
-                return (
-                    heading &&
-                    heading.id &&
-                    (heading.id.startsWith('Etymology') ||
-                        h4Prefixes.some((prefix) =>
-                            heading.id.startsWith(prefix)
-                        ))
-                );
-            });
-
-            if (!(wordSenseContents.length === 2 && hasEtymology)) {
-                wordSenseContents.forEach((sense) => {
-                    const details = tempDoc.createElement('details');
-                    details.open = false;
-
-                    const summary = tempDoc.createElement('summary');
-                    const heading = sense.querySelector('h3, h4');
-                    if (heading) {
-                        summary.innerHTML = heading.outerHTML;
-                        heading.remove();
-                    } else {
-                        summary.textContent = 'Sense';
-                    }
-                    details.appendChild(summary);
-
-                    while (sense.firstChild) {
-                        details.appendChild(sense.firstChild);
-                    }
-
-                    sense.replaceWith(details);
-                });
-            }
-        }
-        lang.content = tempDoc.body.innerHTML;
-    });
-}
-
 function initializeDocument(htmlText: string): {
     doc: Document;
     sectionSettings: any;
@@ -210,15 +126,13 @@ export function parseLanguageSections(htmlText: string): {
     }
 
     processLinks(doc);
-    processHeadings(doc, sectionSettings);
     processDocumentSections(doc);
     processTranslationCollapsibility(doc);
+    applySectionSettings(doc);
 
     const extractedLanguages = extractLanguages(doc);
     const { filteredLanguages, activeTab } =
         filterLanguages(extractedLanguages);
-
-    processWordSenseContents(filteredLanguages);
 
     return { languages: filteredLanguages, activeTab };
 }
