@@ -58,9 +58,14 @@
 
 <div class="relative flex items-center">
     {#if $searchResults.length > 0}
-        <h6 class="absolute right-4">
-            {$totalHits > 10 ? '10+' : $searchResults.length} results
-        </h6>
+        <button
+            class="absolute right-4 !bg-transparent top-2 !p-0 !border-0 !shadow-none"
+            onclick={() => searchTerm.set('')}
+        >
+            {$totalHits > 10 ? '10+' : $searchResults.length} results<span
+                class="!text-red-600 ml-2">X</span
+            >
+        </button>
     {/if}
     <input
         type="search"

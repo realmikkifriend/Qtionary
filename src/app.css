@@ -75,7 +75,7 @@ article:empty {
     padding: 0;
 }
 
-button {
+/* button {
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 0.3em 0.8em;
@@ -91,7 +91,7 @@ button:hover {
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
-}
+} */
 
 summary {
     display: flex;
@@ -116,19 +116,10 @@ select {
 
 .was-wotd,
 .sister-project,
-.mw-empty-elt {
+.mw-empty-elt,
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
     display: none !important;
-}
-
-@media (prefers-color-scheme: light) {
-    :root {
-        color: #213547;
-        background-color: #ffffff;
-    }
-    a:hover {
-        color: #747bff;
-    }
-    button {
-        background-color: #f9f9f9;
-    }
 }
